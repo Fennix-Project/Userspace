@@ -1,39 +1,29 @@
-// EXPERIMENTAL
+#include "../../../../Kernel/Fex.hpp"
 
-enum FexFormatType
+extern "C" int _start(void *Data);
+
+HEAD(FexFormatType_Executable, FexOSType_Fennix, _start);
+
+#define DEFINE_SYSCALL0(function, n)          \
+    static inline long syscall_##function()   \
+    {                                         \
+        long a = n;                           \
+        __asm__ __volatile__("pushq %%r11\n"  \
+                             "pushq %%rcx\n"  \
+                             "syscall\n"      \
+                             "popq %%rcx\n"   \
+                             "popq %%r11\n"   \
+                             : "=a"(a)        \
+                             : "a"((long)a)); \
+        return a;                             \
+    }
+
+DEFINE_SYSCALL0(exit, 1);
+#define UNUSED(x) (void)(x)
+
+extern "C" int _start(void *Data)
 {
-    FexFormatType_Unknown,
-    FexFormatType_Executable,
-    FexFormatType_Driver
-    /* ... */
-};
-
-enum FexOSType
-{
-    FexOSType_Unknown,
-    FexOSType_Fennix,
-    FexOSType_Linux
-    /* ... */
-};
-
-struct Fex
-{
-    char Magic[4];
-    int Type;
-    int OS;
-    unsigned long Pointer;
-};
-
-extern "C" int _start();
-
-__attribute__((section(".header")))
-Fex header = {
-    .Magic = {'F', 'E', 'X', '\0'},
-    .Type = FexFormatType_Executable,
-    .OS = FexOSType_Fennix,
-    .Pointer = (unsigned long)_start};
-
-extern "C" int _start()
-{
+    UNUSED(Data);
+    syscall_exit();
     return 0;
 }

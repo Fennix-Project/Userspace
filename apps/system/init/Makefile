@@ -1,13 +1,13 @@
 # Config file
-include ../../../Makefile.conf
+include ../../../../Makefile.conf
 
 FILENAME = init.fex
 
-CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
-CPP = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)g++
-LD = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ld
-AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
-OBJDUMP = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)objdump
+CC = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
+CPP = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)g++
+LD = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ld
+AS = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
+OBJDUMP = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)objdump
 
 GIT_COMMIT = $(shell git rev-parse HEAD)
 GIT_COMMIT_SHORT = $(shell git rev-parse --short HEAD)
@@ -47,14 +47,14 @@ ifeq ($(OSARCH), amd64)
 
 CFLAGS += -fPIC -fno-pie -mno-80387 -mno-mmx -mno-3dnow	\
 		  -mno-red-zone -mno-sse -mno-sse2				\
-		  -march=x86-64 -pipe							\
+		  -march=x86-64 -pipe -ffunction-sections		\
 		  -mcmodel=kernel -msoft-float -fno-builtin
 LDFLAGS += -Tarch/amd64/linker.ld
 
 else ifeq ($(OSARCH), i686)
 
 CFLAGS += -fPIC -fno-pie -mno-80387 -mno-mmx -mno-3dnow	\
-		  -mno-red-zone -mno-sse -mno-sse2				\
+		  -mno-red-zone -mno-sse -mno-sse2 -ffunction-sections	\
 		  -march=i686 -pipe -msoft-float -fno-builtin
 LDFLAGS += -Tarch/i686/linker.ld
 
@@ -73,7 +73,7 @@ else ifeq ($(OSARCH), i686)
 else ifeq ($(OSARCH), aarch64)
 
 endif
-	mv $(FILENAME) ../../out/$(FILENAME)
+	mv $(FILENAME) ../../../out/system/$(FILENAME)
 
 $(FILENAME): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@
