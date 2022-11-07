@@ -1,29 +1,17 @@
-#include "../../../../Kernel/Fex.hpp"
-
-extern "C" int _start(void *Data);
-
-HEAD(FexFormatType_Executable, FexOSType_Fennix, _start);
-
-#define DEFINE_SYSCALL0(function, n)          \
-    static inline long syscall_##function()   \
-    {                                         \
-        long a = n;                           \
-        __asm__ __volatile__("pushq %%r11\n"  \
-                             "pushq %%rcx\n"  \
-                             "syscall\n"      \
-                             "popq %%rcx\n"   \
-                             "popq %%r11\n"   \
-                             : "=a"(a)        \
-                             : "a"((long)a)); \
-        return a;                             \
-    }
-
-DEFINE_SYSCALL0(exit, 1);
 #define UNUSED(x) (void)(x)
 
-extern "C" int _start(void *Data)
+extern "C" int main(int argc, char *argv[], char *envp[])
 {
-    UNUSED(Data);
-    syscall_exit();
+    UNUSED(argc);
+    UNUSED(argv);
+    UNUSED(envp);
+
+    // unsigned long ret;
+    // asm volatile("syscall"
+    //              : "=a"(ret)
+    //              : "a"(1), "D"(1)
+    //              : "rcx", "r11", "memory");
+
+    // syscall_exit();
     return 0;
 }

@@ -1,7 +1,9 @@
 # Config file
 include ../../../../Makefile.conf
 
-FILENAME = init.fex
+FILENAME = init.elf
+
+SYSROOT = --sysroot=../../../out/system/
 
 CC = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
 CPP = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)g++
@@ -25,16 +27,11 @@ S_SOURCES = $(shell find ./ -type f -name '*.S' -not -path "./arch/amd64/*" -not
 C_SOURCES = $(shell find ./ -type f -name '*.c' -not -path "./arch/amd64/*" -not -path "./arch/i686/*")
 CPP_SOURCES = $(shell find ./ -type f -name '*.cpp' -not -path "./arch/amd64/*" -not -path "./arch/i686/*")
 endif
-HEADERS = $(sort $(dir $(wildcard ./include/*)))
+HEADERS = $(sort $(dir $(wildcard ../../../out/system/include/*)))
 OBJ = $(C_SOURCES:.c=.o) $(CPP_SOURCES:.cpp=.o) $(ASM_SOURCES:.asm=.o) $(S_SOURCES:.S=.o) $(PSF_SOURCES:.psf=.o) $(BMP_SOURCES:.bmp=.o)
-INCLUDE_DIR = ./include
+INCLUDE_DIR = ../../../out/system/include
 
-LDFLAGS := 									\
-	-fPIC -fno-pie 							\
-	-Wl,-static,--no-dynamic-linker,-ztext 	\
-	-nostdlib -nodefaultlibs -nolibc  		\
-	-zmax-page-size=0x1000					\
-	-Wl,-Map file.map -shared
+LDFLAGS := -fPIC -Wl,-Map file.map
 
 WARNCFLAG = -Wall -Wextra
 
@@ -45,38 +42,27 @@ CFLAGS :=										\
 
 ifeq ($(OSARCH), amd64)
 
-CFLAGS += -fPIC -fno-pie -mno-80387 -mno-mmx -mno-3dnow	\
-		  -mno-red-zone -mno-sse -mno-sse2				\
-		  -march=x86-64 -pipe -ffunction-sections		\
-		  -mcmodel=kernel -msoft-float -fno-builtin
+CFLAGS += -fPIC -march=x86-64
 LDFLAGS += -Tarch/amd64/linker.ld
 
 else ifeq ($(OSARCH), i686)
 
-CFLAGS += -fPIC -fno-pie -mno-80387 -mno-mmx -mno-3dnow	\
-		  -mno-red-zone -mno-sse -mno-sse2 -ffunction-sections	\
-		  -march=i686 -pipe -msoft-float -fno-builtin
+CFLAGS += -fPIC -march=i686
 LDFLAGS += -Tarch/i686/linker.ld
 
 else ifeq ($(OSARCH), aarch64)
 
-CFLAGS += -pipe -fno-builtin -fPIC
+CFLAGS += -pipe -fPIC
 LDFLAGS += -Tarch/aarch64/linker.ld
 
 endif
 
 build: $(FILENAME)
-ifeq ($(OSARCH), amd64)
-	$(OBJDUMP) -b binary -D -m i386:x86-64 -d $(FILENAME) > file_dump.map
-else ifeq ($(OSARCH), i686)
-
-else ifeq ($(OSARCH), aarch64)
-
-endif
+	$(OBJDUMP) -d $(FILENAME) > file_dump.map
 	mv $(FILENAME) ../../../out/system/$(FILENAME)
 
 $(FILENAME): $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ) -o $@
+	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -o $@
 
 %.o: %.c $(HEADERS)
 	$(info Compiling $<)
