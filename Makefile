@@ -1,6 +1,7 @@
 build:
 	mkdir -p out
 	mkdir -p out/system
+	mkdir -p out/system/lib
 	make --quiet -C libc build
 	make --quiet -C apps build
 
