@@ -43,17 +43,14 @@ CFLAGS :=										\
 ifeq ($(OSARCH), amd64)
 
 CFLAGS += -fPIC -march=x86-64
-LDFLAGS += -Tarch/amd64/linker.ld
 
 else ifeq ($(OSARCH), i686)
 
 CFLAGS += -fPIC -march=i686
-LDFLAGS += -Tarch/i686/linker.ld
 
 else ifeq ($(OSARCH), aarch64)
 
 CFLAGS += -pipe -fPIC
-LDFLAGS += -Tarch/aarch64/linker.ld
 
 endif
 
