@@ -2,11 +2,10 @@ int main(int argc, char *argv[], char *envp[]);
 
 void _start()
 {
-    // TODO: Implement
-    int *argc = 0;
-    char **argv = 0;
-    char **envp = 0;
-    int mainret = main((int)*argc, (char **)argv, (char **)envp);
+    register int argc __asm__("rdi");
+    register char **argv __asm__("rsi");
+    register char **envp __asm__("rdx");
+    int mainret = main((int)argc, (char **)argv, (char **)envp);
     __asm__ __volatile__("syscall"
                          :
                          : "a"(0), "D"(mainret)
