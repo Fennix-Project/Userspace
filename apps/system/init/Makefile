@@ -33,7 +33,7 @@ INCLUDE_DIR = ../../../out/system/include
 
 LDFLAGS := -fPIC -Wl,-Map file.map
 
-WARNCFLAG = -Wall -Wextra
+WARNCFLAG = -Wall -Wextra -Wno-builtin-declaration-mismatch
 
 CFLAGS :=										\
 	-I$(INCLUDE_DIR)							\
