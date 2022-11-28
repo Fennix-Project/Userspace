@@ -42,7 +42,7 @@ CFLAGS :=										\
 
 ifeq ($(OSARCH), amd64)
 
-CFLAGS += -fPIC -march=x86-64
+CFLAGS += -fPIC -march=x86-64 -fstack-protector-all -fstack-clash-protection
 
 else ifeq ($(OSARCH), i686)
 
