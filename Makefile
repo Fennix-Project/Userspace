@@ -4,6 +4,7 @@ build:
 	mkdir -p out/system/lib
 	mkdir -p out/system/include
 	make --quiet -C libc build
+	make --quiet -C libs build
 	make --quiet -C apps build
 
 prepare:
@@ -11,5 +12,6 @@ prepare:
 
 clean:
 	rm -rf out
-	make --quiet -C libc clean
-	make --quiet -C apps clean
+	make -C libc clean
+	make -C libs clean
+	make -C apps clean

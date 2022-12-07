@@ -58,16 +58,16 @@ static inline long syscall2(int sc, long arg1, long arg2)
     return ret;
 }
 
-extern "C" void putchar(char c) { syscall2(1, c, 0); }
+void putchar(char c) { syscall2(1, c, 0); }
 
 int main(int argc, char *argv[], char *envp[])
 {
     printf_("Hello World!\n");
     printf_("I have %d arguments\n", argc);
     for (int i = 0; i < argc; i++)
-        printf_("argv[%d] = %s\n", i, argv[i]);
+        printf_("argv[%d] = (%p) %s\n", i, argv[i], argv[i]);
     for (int i = 0; envp[i]; i++)
-        printf_("envp[%d] = %s\n", i, envp[i]);
+        printf_("envp[%d] = (%p) %s\n", i, envp[i], envp[i]);
     Elf64_auxv_t *auxv;
     while (*envp++ != NULL)
         ;

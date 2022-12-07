@@ -2,4 +2,4 @@ build:
 	make --quiet -C init build
 
 clean:
-	make --quiet -C init clean
+	make -C init clean

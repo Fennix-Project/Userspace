@@ -1,21 +1,20 @@
 # Config file
 include ../../../Makefile.conf
 
-NAME=c
+NAME=ssp
 
 OBJECT_NAME=lib$(NAME).a
 
 OUTPUT_DIR=../../out/system/lib/
 
 CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
-AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
 AR = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ar
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
-S_SOURCES = $(shell find ./ -type f -name '*.S')
+S_SOURCES = $(shell find ./ -type f -name '*.s')
 ASM_SOURCES = $(shell find ./ -type f -name '*.asm')
-OBJ = ${C_SOURCES:.c=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.S=.o}
+OBJ = ${C_SOURCES:.c=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.s=.o}
 
 INCLUDE_DIR = ../include
 
@@ -25,7 +24,7 @@ else ifeq ($(OSARCH), i686)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -mno-red-zone -I$(INCLUDE_DIR)
+CFLAGS := -fPIC -I$(INCLUDE_DIR)
 
 build: $(OBJECT_NAME)
 
@@ -38,11 +37,8 @@ $(OBJECT_NAME): $(OBJ)
 %.o: %.cpp $(HEADERS) $(HEADERS2)
 	$(CC) $(CFLAGS) -std=c++20 -c $< -o $@
 
-%.o: %.S
-	$(AS) -c $< -o $@
-
 %.o: %.asm
 	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 clean:
-	rm -f $(OBJ)
+

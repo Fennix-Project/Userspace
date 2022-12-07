@@ -1,7 +1,7 @@
 # Config file
 include ../../../../Makefile.conf
 
-FILENAME = init.elf
+FILENAME = echo.elf
 
 SYSROOT = --sysroot=../../../out/system/
 
@@ -42,7 +42,7 @@ CFLAGS :=										\
 
 ifeq ($(OSARCH), amd64)
 
-CFLAGS += -march=x86-64 -fstack-protector-all -fstack-clash-protection
+CFLAGS += -march=x86-64
 
 else ifeq ($(OSARCH), i686)
 
@@ -59,7 +59,7 @@ build: $(FILENAME)
 	mv $(FILENAME) ../../../out/system/$(FILENAME)
 
 $(FILENAME): $(OBJ)
-	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -o $@
+	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -o $@
 
 %.o: %.c $(HEADERS)
 	$(info Compiling $<)
