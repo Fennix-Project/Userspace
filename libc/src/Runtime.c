@@ -1,7 +1,7 @@
 
-extern void __libc_init_array();
+extern void __libc_init_array(void);
 
-void __libc_init()
+void __libc_init(void)
 {
     __libc_init_array();
 }

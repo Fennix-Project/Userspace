@@ -12,7 +12,6 @@ _start:
 	pushq %rdi
 
 	call __libc_init
-	call _init
 
 	popq %rdi
 	popq %rsi
