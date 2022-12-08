@@ -1,4 +1,20 @@
+# Config file
+include ../Makefile.conf
+
 build:
+ifeq ($(NEWLIB), 1)
+
+ifeq (,$(wildcard ./newlib-cygwin))
+	git clone https://github.com/Fennix-Project/newlib-cygwin.git newlib-cygwin
+endif
+
+else ifeq ($(MLIBC), 1)
+
+ifeq (,$(wildcard ./newlib-cygwin))
+	git clone https://github.com/Fennix-Project/mlibc.git mlibc
+endif
+
+else
 	mkdir -p out
 	mkdir -p out/system
 	mkdir -p out/system/lib
@@ -6,6 +22,7 @@ build:
 	make --quiet -C libc build
 	make --quiet -C libs build
 	make --quiet -C apps build
+endif
 
 prepare:
 	$(info Nothing to prepare)
