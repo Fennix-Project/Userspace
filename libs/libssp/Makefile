@@ -7,8 +7,8 @@ OBJECT_NAME=lib$(NAME).a
 
 OUTPUT_DIR=../../out/system/lib/
 
-CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
-AR = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ar
+CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
+AR = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')

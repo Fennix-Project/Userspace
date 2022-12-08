@@ -1,8 +1,8 @@
 # Config file
 include ../../../Makefile.conf
 
-CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
-AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
+CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
+AS = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
@@ -16,8 +16,14 @@ else ifeq ($(OSARCH), i686)
 ASM_ARCH := elf32
 endif
 
+CRTBEGIN_PATH = $(shell $(CC) -print-file-name=crtbegin.o)
+CRTEND_PATH = $(shell $(CC) -print-file-name=crtend.o)
+CRTI_PATH = $(shell $(CC) -print-file-name=crti.o)
+CRTN_PATH = $(shell $(CC) -print-file-name=crtn.o)
+
 build: $(OBJ)
 	mv $^ ../../out/system/lib/
+	cp $(CRTBEGIN_PATH) $(CRTEND_PATH) $(CRTI_PATH) $(CRTN_PATH) ../../out/system/lib/
 
 %.o: %.c
 	$(CC) -nostdlib -mno-red-zone -std=c17 -c $< -o $@

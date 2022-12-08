@@ -5,11 +5,11 @@ FILENAME = echo.elf
 
 SYSROOT = --sysroot=../../../out/system/
 
-CC = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
-CPP = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)g++
-LD = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ld
-AS = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
-OBJDUMP = ../../../../$(COMPILER_PATH)/$(COMPILER_ARCH)objdump
+CC = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
+CPP = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)g++
+LD = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ld
+AS = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
+OBJDUMP = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)objdump
 
 GIT_COMMIT = $(shell git rev-parse HEAD)
 GIT_COMMIT_SHORT = $(shell git rev-parse --short HEAD)
