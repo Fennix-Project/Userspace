@@ -14,5 +14,5 @@ void _exit(int Code)
                          : "rcx", "r11", "memory");
 
     while (1)
-        __asm__ __volatile__("hlt");
+        ;
 }
