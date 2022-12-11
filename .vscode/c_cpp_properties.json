@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/libc/include/**",
-                "${workspaceFolder}/out/system/include**"
+                "${workspaceFolder}/out/system/include/**"
             ],
             "defines": [
                 "__debug_vscode__",
