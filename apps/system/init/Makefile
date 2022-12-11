@@ -33,7 +33,7 @@ INCLUDE_DIR = ../../../out/system/include
 
 LDFLAGS := -Wl,-Map file.map
 
-WARNCFLAG = -Wall -Wextra -Wno-builtin-declaration-mismatch
+WARNCFLAG = -Wall -Wextra -Wmain
 
 CFLAGS :=										\
 	-I$(INCLUDE_DIR)							\
@@ -41,17 +41,11 @@ CFLAGS :=										\
 	-DGIT_COMMIT_SHORT='"$(GIT_COMMIT_SHORT)"'
 
 ifeq ($(OSARCH), amd64)
-
 CFLAGS += -march=x86-64 -fstack-protector-all -fstack-clash-protection
-
 else ifeq ($(OSARCH), i686)
-
 CFLAGS += -march=i686
-
 else ifeq ($(OSARCH), aarch64)
-
 CFLAGS += -pipe
-
 endif
 
 build: $(FILENAME)
@@ -59,7 +53,7 @@ build: $(FILENAME)
 	mv $(FILENAME) ../../../out/system/$(FILENAME)
 
 $(FILENAME): $(OBJ)
-	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -o $@
+	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -linit -o $@
 
 %.o: %.c $(HEADERS)
 	$(info Compiling $<)
