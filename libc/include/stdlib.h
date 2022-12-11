@@ -9,11 +9,15 @@ extern "C"
 #endif
 
     void abort(void);
-    int atexit(void (*)(void));
-    int atoi(const char *);
-    void free(void *);
-    char *getenv(const char *);
-    void *malloc(size_t);
+    int atexit(void (*function)(void));
+    void exit(int status);
+    int atoi(const char *nptr);
+    char *getenv(const char *name);
+
+    void *malloc(size_t Size);
+    void *realloc(void *Address, size_t Size);
+    void *calloc(size_t Count, size_t Size);
+    void free(void *Address);
 
 #ifdef __cplusplus
 }

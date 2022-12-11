@@ -16,19 +16,24 @@ extern "C"
 {
 #endif
 
+    extern FILE *stdin;
+    extern FILE *stdout;
     extern FILE *stderr;
-#define stderr stderr
 
-    int fclose(FILE *);
-    int fflush(FILE *);
-    FILE *fopen(const char *, const char *);
-    int fprintf(FILE *, const char *, ...);
-    size_t fread(void *, size_t, size_t, FILE *);
-    int fseek(FILE *, long, int);
-    long ftell(FILE *);
-    size_t fwrite(const void *, size_t, size_t, FILE *);
-    void setbuf(FILE *, char *);
-    int vfprintf(FILE *, const char *, va_list);
+    int fclose(FILE *stream);
+    int fflush(FILE *stream);
+    FILE *fopen(const char *filename, const char *mode);
+    int fprintf(FILE *stream, const char *format, ...);
+    int printf(const char *format, ...);
+    size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+    int fseek(FILE *stream, long offset, int whence);
+    long ftell(FILE *stream);
+    size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+    void setbuf(FILE *stream, char *buf);
+    int vfprintf(FILE *stream, const char *format, va_list arg);
+
+    int puts(const char *s);
+    int putchar(int c);
 
 #ifdef __cplusplus
 }

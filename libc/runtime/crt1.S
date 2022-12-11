@@ -8,6 +8,8 @@ _start:
 	pushq %rbp
 	movq %rsp, %rbp
 
+	pushq %rcx
+	pushq %rdx
 	pushq %rsi
 	pushq %rdi
 
@@ -15,6 +17,8 @@ _start:
 
 	popq %rdi
 	popq %rsi
+	popq %rdx
+	popq %rcx
 
 	call main
 	movl %eax, %edi
