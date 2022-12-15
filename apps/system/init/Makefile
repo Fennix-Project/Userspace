@@ -33,7 +33,7 @@ INCLUDE_DIR = ../../../out/system/include
 
 LDFLAGS := -Wl,-Map file.map
 
-WARNCFLAG = -Wall -Wextra -Wmain
+WARNCFLAG = -Wall -Wextra -Wno-main
 
 CFLAGS :=										\
 	-I$(INCLUDE_DIR)							\
@@ -61,7 +61,7 @@ $(FILENAME): $(OBJ)
 
 %.o: %.cpp $(HEADERS)
 	$(info Compiling $<)
-	$(CPP) $(CFLAGS) $(WARNCFLAG) -std=c++20 -fexceptions -c $< -o $@ -fno-rtti
+	$(CPP) $(CFLAGS) $(WARNCFLAG) -std=c++20 -c $< -o $@
 
 %.o: %.S
 	$(info Compiling $<)
