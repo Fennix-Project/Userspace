@@ -1,7 +1,12 @@
 #ifndef _STDDEF_H
 #define _STDDEF_H
 
+#ifdef __cplusplus
+#define NULL 0
+#else
 #define NULL ((void *)0)
+#define bool _Bool
+#endif
 
 typedef __INT8_TYPE__ int8_t;
 typedef __INT16_TYPE__ int16_t;

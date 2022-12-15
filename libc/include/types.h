@@ -1,6 +1,9 @@
 #ifndef __FENNIX_LIBC_TYPES_H__
 #define __FENNIX_LIBC_TYPES_H__
 
+#include <stddef.h>
+#include <stdarg.h>
+
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #define START_EXTERNC \
@@ -12,13 +15,6 @@
 #define EXTERNC
 #define START_EXTERNC
 #define END_EXTERNC
-#endif
-
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#define bool _Bool
 #endif
 
 #define asm __asm__
@@ -37,14 +33,6 @@
 
 #define toupper(c) ((c)-0x20 * (((c) >= 'a') && ((c) <= 'z')))
 #define tolower(c) ((c) + 0x20 * (((c) >= 'A') && ((c) <= 'Z')))
-
-#ifndef __va_list__
-typedef __builtin_va_list va_list;
-#endif
-
-#define va_start(v, l) __builtin_va_start(v, l)
-#define va_end(v) __builtin_va_end(v)
-#define va_arg(v, l) __builtin_va_arg(v, l)
 
 #define ALIGN_UP(x, align) ((__typeof__(x))(((uint64_t)(x) + ((align)-1)) & (~((align)-1))))
 #define ALIGN_DOWN(x, align) ((__typeof__(x))((x) & (~((align)-1))))
