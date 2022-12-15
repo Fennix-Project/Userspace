@@ -10,6 +10,7 @@ OUTPUT_DIR=../../out/system/lib/
 CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
 AS = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
 AR = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
+OBJDUMP = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)objdump
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
@@ -30,6 +31,7 @@ build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
 	$(AR) rcs $(OUTPUT_DIR)$@ $(OBJ)
+	$(OBJDUMP) -d $(OUTPUT_DIR)$@ > file_dump.map
 
 %.o: %.c
 	$(CC) $(CFLAGS) -std=c17 -c $< -o $@
@@ -44,4 +46,4 @@ $(OBJECT_NAME): $(OBJ)
 	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 clean:
-	rm -f $(OBJ)
+	rm -f file_dump.map $(OBJ)

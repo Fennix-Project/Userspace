@@ -21,6 +21,7 @@ __attribute__((weak, noreturn, no_stack_protector)) void __stack_chk_fail(void)
                          :
                          : "a"(0), "D"(0x57AC)
                          : "rcx", "r11", "memory");
+    __builtin_unreachable();
 }
 
 __attribute__((weak, noreturn, no_stack_protector)) void __chk_fail(void)
@@ -30,4 +31,5 @@ __attribute__((weak, noreturn, no_stack_protector)) void __chk_fail(void)
                          :
                          : "a"(0), "D"(0xF700)
                          : "rcx", "r11", "memory");
+    __builtin_unreachable();
 }

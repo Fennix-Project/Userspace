@@ -26,7 +26,7 @@ else ifeq ($(OSARCH), i686)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -mno-red-zone -I$(INCLUDE)
+CFLAGS := -fPIC -I$(INCLUDE)
 
 build: $(OBJECT_NAME)
 
