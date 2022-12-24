@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "../mem/liballoc_1_1.h"
 
@@ -37,10 +38,20 @@ int atoi(const char *nptr)
     return OutBuffer;
 }
 
+char **environ = NULL;
+
 char *getenv(const char *name)
 {
-    static char *env = "PATH=/bin";
-    return env;
+    char **env = environ;
+    if (env == NULL)
+        return NULL;
+    size_t len = strlen(name);
+    while (*env != NULL)
+    {
+        if ((strncmp(*env, name, len) == 0) && ((*env)[len] == '='))
+            return &(*env)[len + 1];
+        ++env;
+    }
 }
 
 void *malloc(size_t Size) { return PREFIX(malloc)(Size); }

@@ -1,7 +1,7 @@
 # Config file
 include ../../../Makefile.conf
 
-NAME=init
+NAME=graph
 
 OBJECT_NAME=lib$(NAME).so
 SO_NAME=$(OBJECT_NAME)

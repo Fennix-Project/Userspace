@@ -4,7 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/libc/include/**",
-                "${workspaceFolder}/out/system/include/**"
+                "${workspaceFolder}/out/system/include/**",
+                "${workspaceFolder}/libs/include/**",
+                "${workspaceFolder}/libs/include"
             ],
             "defines": [
                 "__debug_vscode__",
@@ -19,6 +21,10 @@
             "configurationProvider": "ms-vscode.makefile-tools",
             "compilerArgs": [
                 "-pipe",
+                "-nostdinc++",
+                "-nostdinc",
+                "-fno-builtin",
+                "-ffreestanding"
             ]
         }
     ],

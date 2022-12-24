@@ -1,12 +1,12 @@
 # Config file
 include ../../../Makefile.conf
 
-NAME=init
+NAME=ld
 
-OBJECT_NAME=lib$(NAME).so
-SO_NAME=$(OBJECT_NAME)
+OBJECT_NAME=$(NAME).so
+SO_NAME=$(OBJECT_NAME) 
 
-OUTPUT_DIR=../../out/system/lib/
+OUTPUT_DIR=../../out/system/
 SYSROOT = --sysroot=../../out/system/
 
 CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
@@ -21,18 +21,20 @@ S_SOURCES = $(shell find ./ -type f -name '*.S')
 ASM_SOURCES = $(shell find ./ -type f -name '*.asm')
 OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.S=.o}
 
+INCLUDE = ../include
+
 ifeq ($(OSARCH), amd64)
 ASM_ARCH := elf64
 else ifeq ($(OSARCH), i686)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -I../include -I../../libc/include
+CFLAGS := -fPIC -I$(INCLUDE)
 
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
-	$(CC) -nostdlib -shared -fPIC -Wl,-soname,$(SO_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
+	$(CC) -nostdlib -static -fPIC -fPIE -Wl,-soname,$(SO_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
 	$(OBJDUMP) -d $(OUTPUT_DIR)$@ > file_dump.map
 
 %.o: %.c

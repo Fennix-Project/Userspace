@@ -4,7 +4,7 @@ include ../../../Makefile.conf
 NAME=sys
 
 OBJECT_NAME=lib$(NAME).so
-SO_NAME=libsys
+SO_NAME=$(OBJECT_NAME)
 
 OUTPUT_DIR=../../out/system/lib/
 SYSROOT = --sysroot=../../out/system/
