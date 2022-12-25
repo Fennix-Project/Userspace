@@ -29,12 +29,12 @@ else ifeq ($(OSARCH), i686)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -I$(INCLUDE)
+CFLAGS := -fPIC -fPIE -I$(INCLUDE)
 
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
-	$(CC) -nostdlib -static -fPIC -fPIE -Wl,-soname,$(SO_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
+	$(CC) -static -fPIC -fPIE -Wl,-soname,$(SO_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
 	$(OBJDUMP) -d $(OUTPUT_DIR)$@ > file_dump.map
 
 %.o: %.c
