@@ -26,12 +26,15 @@ build: $(OBJ)
 	cp $(CRTBEGIN_PATH) $(CRTEND_PATH) $(CRTI_PATH) $(CRTN_PATH) ../../out/system/lib/
 
 %.o: %.c
+	$(info Compiling $<)
 	$(CC) -nostdlib -mno-red-zone -std=c17 -c $< -o $@
 
 %.o: %.asm
+	$(info Compiling $<)
 	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 %.o: %.S
+	$(info Compiling $<)
 	$(AS) -c $< -o $@
 
 clean:

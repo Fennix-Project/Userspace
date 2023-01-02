@@ -59,6 +59,7 @@ build: $(FILENAME)
 	mv $(FILENAME) ../../../out/system/$(FILENAME)
 
 $(FILENAME): $(OBJ)
+	$(info Linking $@)
 	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -o $@
 
 %.o: %.c $(HEADERS)

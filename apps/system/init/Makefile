@@ -53,6 +53,7 @@ build: $(FILENAME)
 	mv $(FILENAME) ../../../out/system/$(FILENAME)
 
 $(FILENAME): $(OBJ)
+	$(info Linking $@)
 	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -linit -lsys -lgraph -o $@
 
 %.o: %.c $(HEADERS)

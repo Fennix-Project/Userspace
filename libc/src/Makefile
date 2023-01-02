@@ -31,19 +31,24 @@ CFLAGS := -fPIC -I$(INCLUDE)
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
+	$(info Linking $@)
 	$(AR) rcs $(OUTPUT_DIR)$@ $(OBJ)
 
 %.o: %.c
+	$(info Compiling $<)
 	$(CC) $(CFLAGS) -std=c17 -c $< -o $@
 
 %.o: %.cpp
+	$(info Compiling $<)
 	$(CC) $(CFLAGS) -std=c++20 -c $< -o $@
 
 %.o: %.S
+	$(info Compiling $<)
 	$(AS) -c $< -o $@
 
 %.o: %.asm
+	$(info Compiling $<)
 	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ) file_dump.map

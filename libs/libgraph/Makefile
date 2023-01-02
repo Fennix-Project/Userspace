@@ -32,19 +32,24 @@ CFLAGS := -fPIC -I../include -I../../libc/include
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
+	$(info Linking $@)
 	$(CC) -nostdlib -shared -fPIC -Wl,-soname,$(SO_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
 	$(OBJDUMP) -d $(OUTPUT_DIR)$@ > file_dump.map
 
 %.o: %.c
+	$(info Compiling $<)
 	$(CC) $(CFLAGS) -std=c17 -c $< -o $@
 
 %.o: %.cpp
+	$(info Compiling $<)
 	$(CC) $(CFLAGS) -std=c++20 -c $< -o $@
 
 %.o: %.S
+	$(info Compiling $<)
 	$(AS) -c $< -o $@
 
 %.o: %.asm
+	$(info Compiling $<)
 	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 clean:
