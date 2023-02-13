@@ -339,5 +339,5 @@ int ld_load(int argc, char *argv[], char *envp[])
 
     IPC(IPC_DELETE, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
     // FreePages((uintptr_t)IPCBuffer, 1); <- The kernel will free the buffer for us
-    return *(uintptr_t *)IPCBuffer;
+    return *(int *)IPCBuffer;
 }
