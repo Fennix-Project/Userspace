@@ -12,7 +12,28 @@ enum KCtl
     KCTL_GET_UID,
     KCTL_GET_GID,
     KCTL_GET_PAGE_SIZE,
+    KCTL_IS_CRITICAL,
 };
+
+uintptr_t RequestPages(size_t Count)
+{
+    return syscall1(_RequestPages, Count);
+}
+
+int FreePages(uintptr_t Address, size_t Count)
+{
+    return syscall2(_FreePages, Address, Count);
+}
+
+int IPC(enum IPCCommand Command, enum IPCType Type, int ID, int Flags, void *Buffer, size_t Size)
+{
+    return syscall6(_IPC, Command, Type, ID, Flags, Buffer, Size);
+}
+
+uintptr_t KernelCTL(enum KCtl Command, uint64_t Arg1, uint64_t Arg2, uint64_t Arg3, uint64_t Arg4)
+{
+    return syscall5(_KernelCTL, Command, Arg1, Arg2, Arg3, Arg4);
+}
 
 // bool ELFAddLazyResolverToGOT(void *ElfFile, void *MemoryImage, LibAddressCollection *Libs)
 // {
@@ -284,34 +305,25 @@ bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
 */
 
 /* Preload */
-void ld_main()
+int ld_main()
 {
+    /* Prevent race condition. */
+    uintptr_t KCTL_ret = 0xdead;
+    do
+    {
+        KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
+    } while (KCTL_ret == SYSCALL_ACCESS_DENIED);
+
+    if (KCTL_ret == false)
+        return -4;
+
+    /* --------------------------------------------------- */
+
     __asm__ __volatile__("syscall"
                          :
                          : "a"(1), "D"('H'), "S"(0)
                          : "rcx", "r11", "memory");
-
-    return;
-}
-
-uintptr_t RequestPages(size_t Count)
-{
-    return syscall1(_RequestPages, Count);
-}
-
-int FreePages(uintptr_t Address, size_t Count)
-{
-    return syscall2(_FreePages, Address, Count);
-}
-
-int IPC(enum IPCCommand Command, enum IPCType Type, int ID, int Flags, void *Buffer, size_t Size)
-{
-    return syscall6(_IPC, Command, Type, ID, Flags, Buffer, Size);
-}
-
-uintptr_t KernelCTL(enum KCtl Command, uint64_t Arg1, uint64_t Arg2, uint64_t Arg3, uint64_t Arg4)
-{
-    return syscall5(_KernelCTL, Command, Arg1, Arg2, Arg3, Arg4);
+    return 0;
 }
 
 /* Actual load */

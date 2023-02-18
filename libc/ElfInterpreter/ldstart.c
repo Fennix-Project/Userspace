@@ -11,6 +11,9 @@ void __attribute__((naked, used, no_stack_protector)) _ld_start()
             "pushq %rdi\n"
 
             "call ld_main\n"
+            "movl %eax, %edi\n" // Move return value to edi
+            "cmp $0, %edi\n" // Check if return value is 0
+            "jne _exit\n" // If not, jump to _exit
 
             "popq %rdi\n"
             "popq %rsi\n"
@@ -18,8 +21,8 @@ void __attribute__((naked, used, no_stack_protector)) _ld_start()
             "popq %rcx\n"
 
             "call ld_load\n"
-            "movl %eax, %edi\n"
-            "call _exit");
+            "movl %eax, %edi\n" // Move return value to edi
+            "call _exit"); // Call _exit
 }
 
 void _exit(int Code)

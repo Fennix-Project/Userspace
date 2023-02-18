@@ -11,6 +11,7 @@ enum KCtl
     KCTL_GET_UID,
     KCTL_GET_GID,
     KCTL_GET_PAGE_SIZE,
+    KCTL_IS_CRITICAL,
 };
 
 long DoCtl(uint64_t Command, uint64_t Arg1, uint64_t Arg2, uint64_t Arg3, uint64_t Arg4);
