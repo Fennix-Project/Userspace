@@ -308,9 +308,10 @@ bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
 int ld_main()
 {
     /* Prevent race condition. */
-    uintptr_t KCTL_ret = 0xdead;
+    uintptr_t KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
     do
     {
+        syscall1(_Sleep, 250);
         KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
     } while (KCTL_ret == SYSCALL_ACCESS_DENIED);
 
@@ -319,20 +320,14 @@ int ld_main()
 
     /* --------------------------------------------------- */
 
-    __asm__ __volatile__("syscall"
-                         :
-                         : "a"(1), "D"('H'), "S"(0)
-                         : "rcx", "r11", "memory");
+    syscall2(_Print, 'H', 0);
     return 0;
 }
 
 /* Actual load */
 int ld_load(int argc, char *argv[], char *envp[])
 {
-    __asm__ __volatile__("syscall"
-                         :
-                         : "a"(1), "D"('L'), "S"(0)
-                         : "rcx", "r11", "memory");
+    syscall2(_Print, 'L', 0);
 
     void *IPCBuffer = (void *)RequestPages(1);
 
