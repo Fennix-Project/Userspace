@@ -1,0 +1,3 @@
+[submodule "apps/user/games/doomgeneric"]
+	path = apps/user/games/doomgeneric
+	url = https://github.com/Fennix-Project/doomgeneric.git
