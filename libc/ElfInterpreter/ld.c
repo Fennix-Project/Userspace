@@ -318,23 +318,34 @@ int ld_main()
     if (KCTL_ret == false)
         return -4;
 
-    /* --------------------------------------------------- */
-
     syscall2(_Print, 'H', 0);
+
+    /* Everything is ok, continue. */
     return 0;
 }
+
+struct InterpreterIPCDataLibrary
+{
+    char Name[128];
+};
+
+typedef struct
+{
+    char Path[256];
+    void *MemoryImage;
+    struct InterpreterIPCDataLibrary Libraries[256];
+} InterpreterIPCData;
 
 /* Actual load */
 int ld_load(int argc, char *argv[], char *envp[])
 {
     syscall2(_Print, 'L', 0);
 
-    void *IPCBuffer = (void *)RequestPages(1);
-
     uintptr_t PageSize = KernelCTL(KCTL_GET_PAGE_SIZE, 0, 0, 0, 0);
+    int PagesForStruct = sizeof(InterpreterIPCData) / PageSize + 1;
+    InterpreterIPCData *IPCBuffer = (InterpreterIPCData *)RequestPages(PagesForStruct);
 
-    int IPC_ID = IPC(IPC_CREATE, IPC_TYPE_MessagePassing, 0, 0, "LOAD", PageSize);
-
+    int IPC_ID = IPC(IPC_CREATE, IPC_TYPE_MessagePassing, 0, 0, "LOAD", sizeof(InterpreterIPCData));
     while (1)
     {
         IPC(IPC_LISTEN, IPC_TYPE_MessagePassing, IPC_ID, 1, NULL, 0);
@@ -344,7 +355,15 @@ int ld_load(int argc, char *argv[], char *envp[])
             break;
     }
 
+    for (size_t i = 0; i < 256; i++)
+    {
+        if (IPCBuffer->Path[i] == '\0')
+            break;
+        syscall2(_Print, IPCBuffer->Path[i], 0);
+    }
+    syscall2(_Print, '\n', 0);
+
     IPC(IPC_DELETE, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
-    // FreePages((uintptr_t)IPCBuffer, 1); <- The kernel will free the buffer for us
+    FreePages((uintptr_t)IPCBuffer, PagesForStruct);
     return *(int *)IPCBuffer;
 }
