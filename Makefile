@@ -19,9 +19,9 @@ else
 	mkdir -p out/system
 	mkdir -p out/system/lib
 	mkdir -p out/system/include
-	make --quiet -C libc build
-	make --quiet -C libs build
-	make --quiet -C apps build
+	make -C libc build
+	make -C libs build
+	make -C apps build
 endif
 
 prepare:

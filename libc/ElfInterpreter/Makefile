@@ -4,7 +4,7 @@ include ../../../Makefile.conf
 NAME=ld
 
 OBJECT_NAME=$(NAME).so
-SO_NAME=$(OBJECT_NAME) 
+SO_NAME=$(OBJECT_NAME)
 
 OUTPUT_DIR=../../out/system/
 SYSROOT = --sysroot=../../out/system/

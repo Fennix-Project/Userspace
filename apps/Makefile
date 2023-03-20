@@ -1,7 +1,7 @@
 build:
-	make --quiet -C system build
-	make --quiet -C base build
-	make --quiet -C user build
+	make -C system build
+	make -C base build
+	make -C user build
 
 clean:
 	make -C system clean

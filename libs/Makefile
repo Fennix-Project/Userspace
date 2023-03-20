@@ -1,10 +1,10 @@
 build:
 	cp include/* ../out/system/include
-	make --quiet -C libgcc build
-	make --quiet -C libinit build
-	make --quiet -C libssp build
-	make --quiet -C libsys build
-	make --quiet -C libgraph build
+	make -C libgcc build
+	make -C libinit build
+	make -C libssp build
+	make -C libsys build
+	make -C libgraph build
 
 clean:
 	make -C libgcc clean
