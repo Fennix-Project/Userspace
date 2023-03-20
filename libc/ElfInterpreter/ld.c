@@ -367,6 +367,8 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
     PrintNL(" not found");
     int ExitCode = 0x51801;
     syscall1(_Exit, ExitCode);
+    while (1) // Make sure we don't return
+        ;
     __builtin_unreachable();
 }
 
