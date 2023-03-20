@@ -1,9 +1,9 @@
 build:
 	cp -r include/* ../out/system/include
 	cp ../../Kernel/syscalls.h ../out/system/include/sys
-	make --quiet -C runtime build
-	make --quiet -C src build
-	make --quiet -C ElfInterpreter build
+	make -C runtime build
+	make -C src build
+	make -C ElfInterpreter build
 
 clean:
 	make -C runtime clean
