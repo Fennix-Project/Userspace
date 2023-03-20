@@ -1,5 +1,7 @@
 build:
-	make -C doomgeneric build
+	$(info System is not ready for Doom yet.)
+#	make -C doomgeneric build
 
 clean:
-	make -C doomgeneric clean
+	$(info System is not ready for Doom yet.)
+#	make -C doomgeneric clean
