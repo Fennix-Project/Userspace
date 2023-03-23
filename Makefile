@@ -2,7 +2,7 @@
 include ../Makefile.conf
 
 build:
-ifneq ($(NEWLIB),1)
+ifeq ($(NEWLIB),1)
 	make -C mlibc build
 else
 	mkdir -p out
