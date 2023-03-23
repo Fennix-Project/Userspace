@@ -2,18 +2,8 @@
 include ../Makefile.conf
 
 build:
-ifeq ($(NEWLIB), 1)
-
-ifeq (,$(wildcard ./newlib-cygwin))
-	git clone https://github.com/Fennix-Project/newlib-cygwin.git newlib-cygwin
-endif
-
-else ifeq ($(MLIBC), 1)
-
-ifeq (,$(wildcard ./newlib-cygwin))
-	git clone https://github.com/Fennix-Project/mlibc.git mlibc
-endif
-
+ifneq ($(NEWLIB),1)
+	make -C mlibc build
 else
 	mkdir -p out
 	mkdir -p out/system
