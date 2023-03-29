@@ -65,7 +65,7 @@
                 "a32",
                 "DEBUG=\"1\""
             ],
-            "compilerPath": "${workspaceFolder}/../tools/cross/bin/i686-elf-gcc",
+            "compilerPath": "${workspaceFolder}/../tools/cross/bin/i386-elf-gcc",
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "gcc-x86",
@@ -75,7 +75,7 @@
                 "-fPIC",
                 "-fPIE",
                 "-pie",
-                "-march=i686",
+                "-march=i386",
                 "-pipe",
                 "-ffunction-sections",
                 "-fno-builtin",

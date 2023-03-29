@@ -12,7 +12,7 @@ OBJ = ${C_SOURCES:.c=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.S=.o}
 
 ifeq ($(OSARCH), amd64)
 ASM_ARCH := elf64
-else ifeq ($(OSARCH), i686)
+else ifeq ($(OSARCH), i386)
 ASM_ARCH := elf32
 endif
 
