@@ -1,19 +1,9 @@
 #include "ld.h"
 
+#include "../../libs/include/sysbase.h"
 #include "../../../Kernel/syscalls.h"
 #include "../../../Kernel/ipc.h"
 #include "elf.h"
-
-enum KCtl
-{
-    KCTL_NULL,
-    KCTL_GET_PID,
-    KCTL_GET_TID,
-    KCTL_GET_UID,
-    KCTL_GET_GID,
-    KCTL_GET_PAGE_SIZE,
-    KCTL_IS_CRITICAL,
-};
 
 uintptr_t RequestPages(size_t Count)
 {
@@ -27,7 +17,7 @@ int FreePages(uintptr_t Address, size_t Count)
 
 int IPC(enum IPCCommand Command, enum IPCType Type, int ID, int Flags, void *Buffer, size_t Size)
 {
-    return syscall6(_IPC, Command, Type, ID, Flags, Buffer, Size);
+    return syscall6(_IPC, (long)Command, (long)Type, (long)ID, (long)Flags, (long)Buffer, (long)Size);
 }
 
 uintptr_t KernelCTL(enum KCtl Command, uint64_t Arg1, uint64_t Arg2, uint64_t Arg3, uint64_t Arg4)
@@ -38,10 +28,10 @@ uintptr_t KernelCTL(enum KCtl Command, uint64_t Arg1, uint64_t Arg2, uint64_t Ar
 struct LibAddressCollection
 {
     char Name[32];
-    __UINTPTR_TYPE__ *ElfFile;
-    __UINTPTR_TYPE__ *MemoryImage;
-    __UINTPTR_TYPE__ *ParentElfFile;
-    __UINTPTR_TYPE__ *ParentMemoryImage;
+    uintptr_t ElfFile;
+    uintptr_t MemoryImage;
+    uintptr_t ParentElfFile;
+    uintptr_t ParentMemoryImage;
     struct LibAddressCollection *Next;
     char Valid;
 };
@@ -67,12 +57,12 @@ __attribute__((naked, used, no_stack_protector)) void ELF_LAZY_RESOLVE_STUB()
                          "push %r8\n"
                          "push %r9\n"
 
-                         "mov %r11, %rdi\n"
-                         "mov %r10, %rsi\n"
+                         "mov %r11, %rdi\n" // Move the first argument to rdi (libs collection)
+                         "mov %r10, %rsi\n" // Move the second argument to rsi (rel index)
 
                          "call ELF_LAZY_RESOLVE_MAIN\n"
 
-                         "mov %rax, %r11\n"
+                         "mov %rax, %r11\n" // Move the return value to r11
 
                          "pop %r9\n"
                          "pop %r8\n"
@@ -81,10 +71,10 @@ __attribute__((naked, used, no_stack_protector)) void ELF_LAZY_RESOLVE_STUB()
                          "pop %rsi\n"
                          "pop %rdi\n"
 
-                         "jmp *%r11\n");
+                         "jmp *%r11\n"); // Jump to the return value
 }
 
-long abs(long i) { return i < 0 ? -i : i; }
+int abs(int i) { return i < 0 ? -i : i; }
 
 void swap(char *x, char *y)
 {
@@ -105,7 +95,7 @@ char *ltoa(long Value, char *Buffer, int Base)
     if (Base < 2 || Base > 32)
         return Buffer;
 
-    long n = abs(Value);
+    long n = (long)abs((int)Value);
     int i = 0;
 
     while (n)
@@ -136,6 +126,18 @@ static inline void PutCharToKernelConsole(char c)
                          : "rcx", "r11", "memory");
 }
 
+void Print(char *String)
+{
+    for (short i = 0; String[i] != '\0'; i++)
+        PutCharToKernelConsole(String[i]);
+}
+
+void PrintNL(char *String)
+{
+    Print(String);
+    Print("\n");
+}
+
 void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
 {
     __UINT8_TYPE__ *d = dest;
@@ -145,6 +147,13 @@ void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
     return dest;
 }
 
+void *memset(void *s, int c, __SIZE_TYPE__ n)
+{
+    __UINT8_TYPE__ *p = s;
+    while (n--)
+        *p++ = c;
+}
+
 int strcmp(const char *l, const char *r)
 {
     for (; *l == *r && *l; l++, r++)
@@ -152,10 +161,40 @@ int strcmp(const char *l, const char *r)
     return *(unsigned char *)l - *(unsigned char *)r;
 }
 
-Elf64_Sym *ELFGetSymbol(__UINTPTR_TYPE__ *ElfFile, char *SymbolName)
+struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicArrayTags Tag)
 {
-    struct Elf64_Dyn *_SymTab = ELFGetDynamicTag(ElfFile, DT_SYMTAB);
-    struct Elf64_Dyn *_StrTab = ELFGetDynamicTag(ElfFile, DT_STRTAB);
+    Elf64_Ehdr *ELFHeader = (Elf64_Ehdr *)ElfFile;
+
+    Elf64_Phdr ItrProgramHeader;
+    for (Elf64_Half i = 0; i < ELFHeader->e_phnum; i++)
+    {
+        memcpy(&ItrProgramHeader, (__UINT8_TYPE__ *)ElfFile + ELFHeader->e_phoff + ELFHeader->e_phentsize * i, sizeof(Elf64_Phdr));
+        if (ItrProgramHeader.p_type == PT_DYNAMIC)
+        {
+            struct Elf64_Dyn *Dynamic = (struct Elf64_Dyn *)((__UINT8_TYPE__ *)ElfFile + ItrProgramHeader.p_offset);
+            for (__SIZE_TYPE__ i = 0; i < ItrProgramHeader.p_filesz / sizeof(struct Elf64_Dyn); i++)
+            {
+                if (Dynamic[i].d_tag == Tag)
+                {
+                    // debug("Found dynamic tag %d at %#lx [d_val: %#lx].", Tag, &Dynamic[i], Dynamic[i].d_un.d_val);
+                    return &Dynamic[i];
+                }
+                if (Dynamic[i].d_tag == DT_NULL)
+                {
+                    // debug("Reached end of dynamic tag list for tag %d.", Tag);
+                    return (void *)0;
+                }
+            }
+        }
+    }
+    // debug("Dynamic tag %d not found.", Tag);
+    return (void *)0;
+}
+
+Elf64_Sym *ELFGetSymbol(uintptr_t ElfFile, char *SymbolName)
+{
+    struct Elf64_Dyn *_SymTab = ELFGetDynamicTag((void *)ElfFile, DT_SYMTAB);
+    struct Elf64_Dyn *_StrTab = ELFGetDynamicTag((void *)ElfFile, DT_STRTAB);
     Elf64_Sym *DynSym = (Elf64_Sym *)(ElfFile + _SymTab->d_un.d_ptr);
     char *DynStr = (char *)(ElfFile + _StrTab->d_un.d_ptr);
 
@@ -164,36 +203,27 @@ Elf64_Sym *ELFGetSymbol(__UINTPTR_TYPE__ *ElfFile, char *SymbolName)
         if (strcmp(DynStr + DynSym[i].st_name, SymbolName) == 0)
             return &DynSym[i];
     }
+    PrintNL("ELFGetSymbol: Symbol not found!");
     return (Elf64_Sym *)0;
-}
-
-void Print(char *String)
-{
-    for (short i = 0; String[i] != '\0'; i++)
-        PutCharToKernelConsole(String[i]);
-}
-
-void PrintNL(char *String)
-{
-    for (short i = 0; String[i] != '\0'; i++)
-        PutCharToKernelConsole(String[i]);
-
-    PutCharToKernelConsole('\n');
 }
 
 void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))()
 {
+    char DbgBuff[32];
     if (Info)
     {
         struct LibAddressCollection *tmp = Info;
-        PrintNL("________________");
+        PrintNL("_______");
         // The last entry is the null entry (Valid == false) which determines the end of the list.
         while (tmp->Valid)
         {
             Print("-- ");
             Print(tmp->Name);
+            Print(" ");
+            ltoa(RelIndex, DbgBuff, 10);
+            Print(DbgBuff);
             PrintNL(" --");
-            __UINTPTR_TYPE__ BaseAddress = __UINTPTR_MAX__;
+            uintptr_t BaseAddress = __UINTPTR_MAX__;
 
             Elf64_Phdr ItrProgramHeader;
 
@@ -203,19 +233,17 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
                 BaseAddress = MIN(BaseAddress, ItrProgramHeader.p_vaddr);
             }
 
-            char LibAddressBuffer[32];
-            ltoa(tmp->MemoryImage, LibAddressBuffer, 16);
-            Print("MemoryImage: 0x");
-            PrintNL(LibAddressBuffer);
+            ltoa((long)tmp->MemoryImage, DbgBuff, 16);
+            Print("mmImg 0x");
+            PrintNL(DbgBuff);
 
-            char BaseAddressBuffer[32];
-            ltoa(BaseAddress, BaseAddressBuffer, 16);
-            Print("BaseAddress: 0x");
-            PrintNL(BaseAddressBuffer);
+            ltoa(BaseAddress, DbgBuff, 16);
+            Print("BAddr 0x");
+            PrintNL(DbgBuff);
 
-            struct Elf64_Dyn *_JmpRel = ELFGetDynamicTag(tmp->ElfFile, DT_JMPREL);
-            struct Elf64_Dyn *_SymTab = ELFGetDynamicTag(tmp->ElfFile, DT_SYMTAB);
-            struct Elf64_Dyn *_StrTab = ELFGetDynamicTag(tmp->ElfFile, DT_STRTAB);
+            struct Elf64_Dyn *_JmpRel = ELFGetDynamicTag((void *)tmp->ElfFile, DT_JMPREL);
+            struct Elf64_Dyn *_SymTab = ELFGetDynamicTag((void *)tmp->ElfFile, DT_SYMTAB);
+            struct Elf64_Dyn *_StrTab = ELFGetDynamicTag((void *)tmp->ElfFile, DT_STRTAB);
 
             if (!_JmpRel)
             {
@@ -243,75 +271,20 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             if (!_JmpRel && !_SymTab && !_StrTab)
                 goto RetryNextLib;
 
-            char JmpRel_d_ptr[32];
-            ltoa(_JmpRel->d_un.d_ptr, JmpRel_d_ptr, 16);
-            Print("JmpRel_d_ptr: 0x");
-            PrintNL(JmpRel_d_ptr);
-
-            char SymTab_d_ptr[32];
-            ltoa(_SymTab->d_un.d_ptr, SymTab_d_ptr, 16);
-            Print("SymTab_d_ptr: 0x");
-            PrintNL(SymTab_d_ptr);
-
-            char StrTab_d_ptr[32];
-            ltoa(_StrTab->d_un.d_ptr, StrTab_d_ptr, 16);
-            Print("StrTab_d_ptr: 0x");
-            PrintNL(StrTab_d_ptr);
-
-            Elf64_Rela *JmpRel = tmp->MemoryImage + (_JmpRel->d_un.d_ptr - BaseAddress);
-            Elf64_Sym *SymTab = tmp->MemoryImage + (_SymTab->d_un.d_ptr - BaseAddress);
-            char *DynStr = tmp->MemoryImage + (_StrTab->d_un.d_ptr - BaseAddress);
+            Elf64_Rela *JmpRel = (Elf64_Rela *)(tmp->MemoryImage + (_JmpRel->d_un.d_ptr - BaseAddress));
+            Elf64_Sym *SymTab = (Elf64_Sym *)(tmp->MemoryImage + (_SymTab->d_un.d_ptr - BaseAddress));
+            char *DynStr = (char *)(tmp->MemoryImage + (_StrTab->d_un.d_ptr - BaseAddress));
 
             Elf64_Rela *Rel = JmpRel + RelIndex;
-            // Elf64_Rela *Rel = &JmpRel[RelIndex];
             Elf64_Addr *GOTEntry = (Elf64_Addr *)(tmp->MemoryImage + Rel->r_offset);
 
             int RelType = ELF64_R_TYPE(Rel->r_info);
-
-            char RelBuffer[32];
-            ltoa(Rel, RelBuffer, 16);
-            Print("Rel: 0x");
-            PrintNL(RelBuffer);
-
-            char LibRelInfoBuffer[32];
-            ltoa(Rel->r_info, LibRelInfoBuffer, 16);
-            Print("  Rel->r_info: 0x");
-            PrintNL(LibRelInfoBuffer);
-
-            char LibRelOffsetBuffer[32];
-            ltoa(Rel->r_offset, LibRelOffsetBuffer, 16);
-            Print("  Rel->r_offset: 0x");
-            PrintNL(LibRelOffsetBuffer);
-
-            char LibRelAddEntBuffer[32];
-            ltoa(Rel->r_addend, LibRelAddEntBuffer, 16);
-            Print("  Rel->r_addend: 0x");
-            PrintNL(LibRelAddEntBuffer);
-
-            char RelIndexBuffer[32];
-            ltoa(RelIndex, RelIndexBuffer, 16);
-            Print("RelIndex: 0x");
-            PrintNL(RelIndexBuffer);
-
-            char GotAddressBuffer[32];
-            ltoa(GOTEntry, GotAddressBuffer, 16);
-            Print("GOTEntry: 0x");
-            PrintNL(GotAddressBuffer);
-
-            if (GOTEntry && GOTEntry < 0x10000000)
-            {
-                char GotInsideBuffer[32];
-                ltoa(*GOTEntry, GotInsideBuffer, 16);
-                Print("*GOTEntry: 0x");
-                PrintNL(GotInsideBuffer);
-            }
 
             switch (RelType)
             {
             case R_X86_64_NONE:
             {
                 PrintNL("R_X86_64_NONE");
-
                 if (*GOTEntry == 0)
                 {
                     PrintNL("GOTEntry is 0");
@@ -325,17 +298,22 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
                 PrintNL("R_X86_64_JUMP_SLOT");
                 int SymIndex = ELF64_R_SYM(Rel->r_info);
                 Elf64_Sym *Sym = SymTab + SymIndex;
-                // Elf64_Sym *Sym = &SymTab[SymIndex];
 
                 if (Sym->st_name)
                 {
-                    char *SymName = DynStr + Sym->st_name;
+                    char *SymName = DynStr + Sym->st_name; /* I think i get this wrong */
+                    Print("SymName: ");
                     PrintNL(SymName);
 
                     Elf64_Sym *LibSym = ELFGetSymbol(tmp->ElfFile, SymName);
                     if (LibSym)
                     {
                         *GOTEntry = (Elf64_Addr)(tmp->MemoryImage + LibSym->st_value);
+
+                        ltoa(*GOTEntry, DbgBuff, 16);
+                        Print("*GOTEntry: 0x");
+                        PrintNL(DbgBuff);
+
                         Lock = 0;
                         return (void (*)()) * GOTEntry;
                     }
@@ -344,15 +322,15 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             }
             default:
             {
-                char RelTypeBuffer[32];
-                ltoa(RelType, RelTypeBuffer, 10);
+                ltoa(RelType, DbgBuff, 10);
                 Print("RelType not supported ");
-                PrintNL(RelTypeBuffer);
+                PrintNL(DbgBuff);
                 break;
             }
             }
 
         RetryNextLib:
+            PrintNL("Retrying next lib");
             tmp = tmp->Next;
         }
     }
@@ -360,47 +338,14 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
     Lock = 0;
     __asm__ __volatile__("mfence\n");
 
-    char SNotFound[32];
     Print("Symbol index ");
-    ltoa(RelIndex, SNotFound, 10);
-    Print(SNotFound);
+    ltoa(RelIndex, DbgBuff, 10);
+    Print(DbgBuff);
     PrintNL(" not found");
     int ExitCode = 0x51801;
     syscall1(_Exit, ExitCode);
     while (1) // Make sure we don't return
         ;
-    __builtin_unreachable();
-}
-
-bool ELFAddLazyResolverToGOT(void *ElfFile, void *MemoryImage, struct LibAddressCollection *Libs)
-{
-    struct Elf64_Dyn *Dyn = (struct Elf64_Dyn *)ELFGetDynamicTag(ElfFile, DT_PLTGOT);
-    if (!Dyn)
-        return false;
-
-    Elf64_Addr *GOT = (Elf64_Addr *)Dyn->d_un.d_ptr;
-
-    // for (size_t i = 0; i < 16; i++)
-    // {
-    //     char Itr[32];
-    //     char LibAddressBuffer[32];
-    //     char LibValueBuffer[32];
-    //     ltoa(i, Itr, 10);
-    //     ltoa(&GOT[i], LibAddressBuffer, 16);
-    //     ltoa(GOT[i], LibValueBuffer, 16);
-
-    //     Print("GOT[");
-    //     Print(Itr);
-    //     Print("]: 0x");
-    //     Print(LibAddressBuffer);
-    //     Print(" (val: 0x");
-    //     Print(LibValueBuffer);
-    //     PrintNL(")");
-    // }
-
-    GOT[1] = (uintptr_t)Libs;
-    GOT[2] = (uintptr_t)ELF_LAZY_RESOLVE_STUB;
-    return true;
 }
 
 /* This function is a mess and needs to be cleaned up. */
@@ -656,6 +601,19 @@ bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
         ELFAddLazyResolverToGOT(ElfFile, MemoryImage, LibsForLazyResolver);
 */
 
+struct InterpreterIPCDataLibrary
+{
+    char Name[128];
+};
+
+typedef struct
+{
+    char Path[256];
+    void *ElfFile;
+    void *MemoryImage;
+    struct InterpreterIPCDataLibrary Libraries[64];
+} InterpreterIPCData;
+
 /* Preload */
 int ld_main()
 {
@@ -670,36 +628,32 @@ int ld_main()
     if (KCTL_ret == false)
         return -4;
 
-    syscall2(_Print, 'H', 0);
-
     /* Everything is ok, continue. */
     return 0;
 }
 
-struct InterpreterIPCDataLibrary
+bool ELFAddLazyResolverToGOT(void *ElfFile, void *MemoryImage, struct LibAddressCollection *Libs)
 {
-    char Name[128];
-};
+    struct Elf64_Dyn *Dyn = (struct Elf64_Dyn *)ELFGetDynamicTag(ElfFile, DT_PLTGOT);
+    if (!Dyn)
+        return false;
 
-typedef struct
-{
-    char Path[256];
-    void *ElfFile;
-    void *MemoryImage;
-    struct InterpreterIPCDataLibrary Libraries[64];
-} InterpreterIPCData;
+    Elf64_Addr *GOT = (Elf64_Addr *)Dyn->d_un.d_ptr;
+
+    GOT[1] = (uintptr_t)Libs;
+    GOT[2] = (uintptr_t)ELF_LAZY_RESOLVE_STUB;
+    return true;
+}
 
 /* Actual load */
 int ld_load(int argc, char *argv[], char *envp[])
 {
-    syscall2(_Print, 'L', 0);
-
     uintptr_t PageSize = KernelCTL(KCTL_GET_PAGE_SIZE, 0, 0, 0, 0);
-    int PagesForStruct = sizeof(InterpreterIPCData) / PageSize + 1;
-    InterpreterIPCData *IPCBuffer = (InterpreterIPCData *)RequestPages(PagesForStruct);
+    int PagesForIPCDataStruct = sizeof(InterpreterIPCData) / PageSize + 1;
+    InterpreterIPCData *IPCBuffer = (InterpreterIPCData *)RequestPages(PagesForIPCDataStruct);
 
     int IPC_ID = IPC(IPC_CREATE, IPC_TYPE_MessagePassing, 0, 0, "LOAD", sizeof(InterpreterIPCData));
-    while (1)
+    while (true)
     {
         IPC(IPC_LISTEN, IPC_TYPE_MessagePassing, IPC_ID, 1, NULL, 0);
         IPC(IPC_WAIT, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
@@ -708,34 +662,65 @@ int ld_load(int argc, char *argv[], char *envp[])
             break;
     }
 
-    for (size_t i = 0; i < 256; i++)
-    {
-        if (IPCBuffer->Path[i] == '\0')
-            break;
-        syscall2(_Print, IPCBuffer->Path[i], 0);
-    }
-    syscall2(_Print, '\n', 0);
-
-    IPC(IPC_DELETE, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
-    FreePages((uintptr_t)IPCBuffer, PagesForStruct);
-
-    Elf64_Ehdr *ELFHeader = (Elf64_Ehdr *)IPCBuffer->MemoryImage;
-
-    /* ... */
-
     struct LibAddressCollection *LibsForLazyResolver = (struct LibAddressCollection *)RequestPages(sizeof(struct LibAddressCollection) / PageSize + 1);
-    /*
-    TODO: Add libraries to LibsForLazyResolver
-    This can be done by calling the kernel to load the libraries, and then adding them to the LibsForLazyResolver struct.
-    Kernel has a thread for loading libraries. If the lib is already loaded, it will return the address of the loaded lib.
-    */
+    for (size_t i = 0; i < 64; i++)
+    {
+        if (IPCBuffer->Libraries[i].Name[0] == '\0')
+            break;
+
+        uintptr_t lib_addr = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
+        uintptr_t lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
+        if (lib_addr == 0 || lib_mm_image == 0)
+        {
+            enum SyscallsErrorCodes ret = KernelCTL(KCTL_REGISTER_ELF_LIB, (uint64_t)IPCBuffer->Libraries[i].Name, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0);
+            if (ret != SYSCALL_OK)
+            {
+                PrintNL("Failed to register ELF lib");
+                return -0x11B;
+            }
+            lib_addr = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
+            lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
+        }
+
+        if (LibsForLazyResolver->Next == NULL)
+        {
+            LibsForLazyResolver->Valid = true;
+            LibsForLazyResolver->ElfFile = (uintptr_t)lib_addr;
+            LibsForLazyResolver->MemoryImage = (uintptr_t)lib_mm_image;
+            for (size_t j = 0; j < 32; j++)
+                LibsForLazyResolver->Name[j] = IPCBuffer->Libraries[i].Name[j];
+
+            LibsForLazyResolver->Next = (struct LibAddressCollection *)RequestPages(sizeof(struct LibAddressCollection) / PageSize + 1);
+            memset(LibsForLazyResolver->Next, 0, sizeof(struct LibAddressCollection));
+            continue;
+        }
+        struct LibAddressCollection *CurrentLibsForLazyResolver = LibsForLazyResolver;
+
+        while (CurrentLibsForLazyResolver->Next != NULL)
+            CurrentLibsForLazyResolver = CurrentLibsForLazyResolver->Next;
+
+        CurrentLibsForLazyResolver->Valid = true;
+        CurrentLibsForLazyResolver->ElfFile = (uintptr_t)lib_addr;
+        CurrentLibsForLazyResolver->MemoryImage = (uintptr_t)lib_mm_image;
+        for (size_t j = 0; j < 32; j++)
+            CurrentLibsForLazyResolver->Name[j] = IPCBuffer->Libraries[i].Name[j];
+
+        CurrentLibsForLazyResolver->Next = (struct LibAddressCollection *)RequestPages(sizeof(struct LibAddressCollection) / PageSize + 1);
+        memset(CurrentLibsForLazyResolver->Next, 0, sizeof(struct LibAddressCollection));
+    }
+
+    struct LibAddressCollection *CurrentLibsForLazyResolver = LibsForLazyResolver;
 
     if (!ELFAddLazyResolverToGOT(IPCBuffer->ElfFile, IPCBuffer->MemoryImage, LibsForLazyResolver))
     {
-        for (size_t i = 0; i < 35; i++)
-            syscall2(_Print, "Failed to add lazy resolver to GOT\n"[i], 0);
-        return -0xE1F;
+        PrintNL("Failed to add lazy resolver to GOT");
+        return -0x607;
     }
 
-    return ((int (*)(int, char *[], char *[]))ELFHeader->e_entry)(argc, argv, envp);
+    Elf64_Addr Entry = ((Elf64_Ehdr *)IPCBuffer->MemoryImage)->e_entry;
+
+    IPC(IPC_DELETE, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
+    FreePages((uintptr_t)IPCBuffer, PagesForIPCDataStruct);
+
+    return ((int (*)(int, char *[], char *[]))Entry)(argc, argv, envp);
 }
