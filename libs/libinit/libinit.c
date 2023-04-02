@@ -1,5 +1,7 @@
 #include <init.h>
 
+#include "printf.h"
+
 void init_log(const char *fmt, ...)
 {
     printf_libinit("\eCCCCCC[\e0088FFinit\eCCCCCC] \eAAAAAA");
@@ -7,4 +9,5 @@ void init_log(const char *fmt, ...)
     va_start(args, fmt);
     vprintf_libinit(fmt, args);
     va_end(args);
+    printf_libinit("\eCCCCCC");
 }
