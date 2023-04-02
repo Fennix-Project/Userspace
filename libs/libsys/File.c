@@ -3,7 +3,7 @@
 
 #include "../../../Kernel/syscalls.h"
 
-long __FILE_GetPageSize()
+__attribute__((visibility("hidden"))) long __FILE_GetPageSize()
 {
     static long PageSize = 0;
     if (PageSize == 0)
