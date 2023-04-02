@@ -140,8 +140,8 @@ void PrintNL(char *String)
 
 void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
 {
-    __UINT8_TYPE__ *d = dest;
-    const __UINT8_TYPE__ *s = src;
+    uint8_t *d = dest;
+    const uint8_t *s = src;
     while (n--)
         *d++ = *s++;
     return dest;
@@ -149,7 +149,7 @@ void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
 
 void *memset(void *s, int c, __SIZE_TYPE__ n)
 {
-    __UINT8_TYPE__ *p = s;
+    uint8_t *p = s;
     while (n--)
         *p++ = c;
 }
@@ -168,10 +168,10 @@ struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicArrayTags Tag)
     Elf64_Phdr ItrProgramHeader;
     for (Elf64_Half i = 0; i < ELFHeader->e_phnum; i++)
     {
-        memcpy(&ItrProgramHeader, (__UINT8_TYPE__ *)ElfFile + ELFHeader->e_phoff + ELFHeader->e_phentsize * i, sizeof(Elf64_Phdr));
+        memcpy(&ItrProgramHeader, (uint8_t *)ElfFile + ELFHeader->e_phoff + ELFHeader->e_phentsize * i, sizeof(Elf64_Phdr));
         if (ItrProgramHeader.p_type == PT_DYNAMIC)
         {
-            struct Elf64_Dyn *Dynamic = (struct Elf64_Dyn *)((__UINT8_TYPE__ *)ElfFile + ItrProgramHeader.p_offset);
+            struct Elf64_Dyn *Dynamic = (struct Elf64_Dyn *)((uint8_t *)ElfFile + ItrProgramHeader.p_offset);
             for (__SIZE_TYPE__ i = 0; i < ItrProgramHeader.p_filesz / sizeof(struct Elf64_Dyn); i++)
             {
                 if (Dynamic[i].d_tag == Tag)
@@ -193,14 +193,14 @@ struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicArrayTags Tag)
 
 Elf64_Sym *ELFGetSymbol(uintptr_t ElfFile, char *SymbolName)
 {
-    struct Elf64_Dyn *_SymTab = ELFGetDynamicTag((void *)ElfFile, DT_SYMTAB);
-    struct Elf64_Dyn *_StrTab = ELFGetDynamicTag((void *)ElfFile, DT_STRTAB);
-    Elf64_Sym *DynSym = (Elf64_Sym *)(ElfFile + _SymTab->d_un.d_ptr);
-    char *DynStr = (char *)(ElfFile + _StrTab->d_un.d_ptr);
+    struct Elf64_Dyn *symTab = ELFGetDynamicTag((void *)ElfFile, DT_SYMTAB);
+    struct Elf64_Dyn *strTab = ELFGetDynamicTag((void *)ElfFile, DT_STRTAB);
+    Elf64_Sym *DynSym = (Elf64_Sym *)(ElfFile + symTab->d_un.d_ptr);
+    char *dynStr = (char *)(ElfFile + strTab->d_un.d_ptr);
 
-    for (int i = 0; i < _SymTab->d_un.d_val; i++)
+    for (int i = 0; i < symTab->d_un.d_val; i++)
     {
-        if (strcmp(DynStr + DynSym[i].st_name, SymbolName) == 0)
+        if (strcmp(dynStr + DynSym[i].st_name, SymbolName) == 0)
             return &DynSym[i];
     }
     PrintNL("ELFGetSymbol: Symbol not found!");
@@ -212,71 +212,105 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
     char DbgBuff[32];
     if (Info)
     {
-        struct LibAddressCollection *tmp = Info;
+        struct LibAddressCollection *CurLib = Info;
         PrintNL("_______");
         // The last entry is the null entry (Valid == false) which determines the end of the list.
-        while (tmp->Valid)
+        while (CurLib->Valid)
         {
             Print("-- ");
-            Print(tmp->Name);
+            Print(CurLib->Name);
             Print(" ");
             ltoa(RelIndex, DbgBuff, 10);
             Print(DbgBuff);
             PrintNL(" --");
-            uintptr_t BaseAddress = __UINTPTR_MAX__;
+            uintptr_t lib_BaseAddress = __UINTPTR_MAX__;
+            uintptr_t app_BaseAddress = __UINTPTR_MAX__;
 
             Elf64_Phdr ItrProgramHeader;
 
-            for (Elf64_Half i = 0; i < ((Elf64_Ehdr *)tmp->ElfFile)->e_phnum; i++)
+            for (Elf64_Half i = 0; i < ((Elf64_Ehdr *)CurLib->ElfFile)->e_phnum; i++)
             {
-                memcpy(&ItrProgramHeader, (__UINT8_TYPE__ *)tmp->ElfFile + ((Elf64_Ehdr *)tmp->ElfFile)->e_phoff + ((Elf64_Ehdr *)tmp->ElfFile)->e_phentsize * i, sizeof(Elf64_Phdr));
-                BaseAddress = MIN(BaseAddress, ItrProgramHeader.p_vaddr);
+                memcpy(&ItrProgramHeader,
+                       (uint8_t *)CurLib->ElfFile +
+                           ((Elf64_Ehdr *)CurLib->ElfFile)->e_phoff +
+                           ((Elf64_Ehdr *)CurLib->ElfFile)->e_phentsize * i,
+                       sizeof(Elf64_Phdr));
+
+                lib_BaseAddress = MIN(lib_BaseAddress, ItrProgramHeader.p_vaddr);
             }
 
-            ltoa((long)tmp->MemoryImage, DbgBuff, 16);
-            Print("mmImg 0x");
+            for (Elf64_Half i = 0; i < ((Elf64_Ehdr *)CurLib->ParentElfFile)->e_phnum; i++)
+            {
+                memcpy(&ItrProgramHeader,
+                       (uint8_t *)CurLib->ParentElfFile +
+                           ((Elf64_Ehdr *)CurLib->ParentElfFile)->e_phoff +
+                           ((Elf64_Ehdr *)CurLib->ParentElfFile)->e_phentsize * i,
+                       sizeof(Elf64_Phdr));
+
+                app_BaseAddress = MIN(app_BaseAddress, ItrProgramHeader.p_vaddr);
+            }
+
+            ltoa((long)CurLib->MemoryImage, DbgBuff, 16);
+            Print("lib:mmImg 0x");
             PrintNL(DbgBuff);
 
-            ltoa(BaseAddress, DbgBuff, 16);
-            Print("BAddr 0x");
+            ltoa((long)CurLib->ParentMemoryImage, DbgBuff, 16);
+            Print("lib:mmImg 0x");
             PrintNL(DbgBuff);
 
-            struct Elf64_Dyn *_JmpRel = ELFGetDynamicTag((void *)tmp->ElfFile, DT_JMPREL);
-            struct Elf64_Dyn *_SymTab = ELFGetDynamicTag((void *)tmp->ElfFile, DT_SYMTAB);
-            struct Elf64_Dyn *_StrTab = ELFGetDynamicTag((void *)tmp->ElfFile, DT_STRTAB);
+            ltoa(lib_BaseAddress, DbgBuff, 16);
+            Print("lib:BAddr 0x");
+            PrintNL(DbgBuff);
 
-            if (!_JmpRel)
+            ltoa(app_BaseAddress, DbgBuff, 16);
+            Print("lib:BAddr 0x");
+            PrintNL(DbgBuff);
+
+            struct Elf64_Dyn *lib_JmpRel = ELFGetDynamicTag((void *)CurLib->ElfFile, DT_JMPREL);
+            struct Elf64_Dyn *lib_SymTab = ELFGetDynamicTag((void *)CurLib->ElfFile, DT_SYMTAB);
+            struct Elf64_Dyn *lib_StrTab = ELFGetDynamicTag((void *)CurLib->ElfFile, DT_STRTAB);
+
+            struct Elf64_Dyn *app_JmpRel = ELFGetDynamicTag((void *)CurLib->ParentElfFile, DT_JMPREL);
+            struct Elf64_Dyn *app_SymTab = ELFGetDynamicTag((void *)CurLib->ParentElfFile, DT_SYMTAB);
+            struct Elf64_Dyn *app_StrTab = ELFGetDynamicTag((void *)CurLib->ParentElfFile, DT_STRTAB);
+
+            if (!lib_JmpRel)
             {
                 PrintNL("No DT_JMPREL");
                 goto RetryNextLib;
             }
-            else if (RelIndex >= _JmpRel->d_un.d_val / sizeof(Elf64_Rela))
+            else if (RelIndex >= lib_JmpRel->d_un.d_val / sizeof(Elf64_Rela))
             {
                 PrintNL("RelIndex is greater than the number of relocations");
                 goto RetryNextLib;
             }
 
-            if (!_SymTab)
+            if (!lib_SymTab)
             {
                 PrintNL("No DT_SYMTAB");
                 goto RetryNextLib;
             }
 
-            if (!_StrTab)
+            if (!lib_StrTab)
             {
                 PrintNL("No DT_STRTAB");
                 goto RetryNextLib;
             }
 
-            if (!_JmpRel && !_SymTab && !_StrTab)
+            if (!lib_JmpRel && !lib_SymTab && !lib_StrTab)
                 goto RetryNextLib;
 
-            Elf64_Rela *JmpRel = (Elf64_Rela *)(tmp->MemoryImage + (_JmpRel->d_un.d_ptr - BaseAddress));
-            Elf64_Sym *SymTab = (Elf64_Sym *)(tmp->MemoryImage + (_SymTab->d_un.d_ptr - BaseAddress));
-            char *DynStr = (char *)(tmp->MemoryImage + (_StrTab->d_un.d_ptr - BaseAddress));
+            Elf64_Rela *_lib_JmpRel = (Elf64_Rela *)(CurLib->MemoryImage + (lib_JmpRel->d_un.d_ptr - lib_BaseAddress));
+            Elf64_Sym *_lib_SymTab = (Elf64_Sym *)(CurLib->MemoryImage + (lib_SymTab->d_un.d_ptr - lib_BaseAddress));
 
-            Elf64_Rela *Rel = JmpRel + RelIndex;
-            Elf64_Addr *GOTEntry = (Elf64_Addr *)(tmp->MemoryImage + Rel->r_offset);
+            Elf64_Rela *_app_JmpRel = (Elf64_Rela *)(CurLib->ParentMemoryImage + (app_JmpRel->d_un.d_ptr - app_BaseAddress));
+            Elf64_Sym *_app_SymTab = (Elf64_Sym *)(CurLib->ParentMemoryImage + (app_SymTab->d_un.d_ptr - app_BaseAddress));
+
+            char *lib_DynStr = (char *)(CurLib->MemoryImage + (lib_StrTab->d_un.d_ptr - lib_BaseAddress));
+            char *app_DynStr = (char *)(CurLib->ParentMemoryImage + (app_StrTab->d_un.d_ptr - app_BaseAddress));
+
+            Elf64_Rela *Rel = _app_JmpRel + RelIndex;
+            Elf64_Addr *GOTEntry = (Elf64_Addr *)(Rel->r_offset);
 
             int RelType = ELF64_R_TYPE(Rel->r_info);
 
@@ -297,18 +331,18 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             {
                 PrintNL("R_X86_64_JUMP_SLOT");
                 int SymIndex = ELF64_R_SYM(Rel->r_info);
-                Elf64_Sym *Sym = SymTab + SymIndex;
+                Elf64_Sym *Sym = _app_SymTab + SymIndex;
 
                 if (Sym->st_name)
                 {
-                    char *SymName = DynStr + Sym->st_name; /* I think i get this wrong */
+                    char *SymName = app_DynStr + Sym->st_name;
                     Print("SymName: ");
                     PrintNL(SymName);
 
-                    Elf64_Sym *LibSym = ELFGetSymbol(tmp->ElfFile, SymName);
+                    Elf64_Sym *LibSym = ELFGetSymbol(CurLib->ElfFile, SymName);
                     if (LibSym)
                     {
-                        *GOTEntry = (Elf64_Addr)(tmp->MemoryImage + LibSym->st_value);
+                        *GOTEntry = (Elf64_Addr)(CurLib->MemoryImage + LibSym->st_value);
 
                         ltoa(*GOTEntry, DbgBuff, 16);
                         Print("*GOTEntry: 0x");
@@ -331,7 +365,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
 
         RetryNextLib:
             PrintNL("Retrying next lib");
-            tmp = tmp->Next;
+            CurLib = CurLib->Next;
         }
     }
 
@@ -347,259 +381,6 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
     while (1) // Make sure we don't return
         ;
 }
-
-/* This function is a mess and needs to be cleaned up. */
-/*
-bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
-{
-    debug("ELF dynamic reallocation for image at %#lx.", ElfFile);
-
-    Elf64_Ehdr *ELFHeader = (Elf64_Ehdr *)ElfFile;
-    uintptr_t BaseAddress = UINTPTR_MAX;
-    size_t ElfAppSize = 0;
-    Elf64_Phdr ItrPhdr;
-
-    for (Elf64_Half i = 0; i < ELFHeader->e_phnum; i++)
-    {
-        memcpy(&ItrPhdr,
-               (uint8_t *)ElfFile + ELFHeader->e_phoff + ELFHeader->e_phentsize * i,
-               sizeof(Elf64_Phdr));
-        BaseAddress = MIN(BaseAddress, ItrPhdr.p_vaddr);
-    }
-
-    for (Elf64_Half i = 0; i < ELFHeader->e_phnum; i++)
-    {
-        memcpy(&ItrPhdr,
-               (uint8_t *)ElfFile + ELFHeader->e_phoff + ELFHeader->e_phentsize * i,
-               sizeof(Elf64_Phdr));
-        uintptr_t SegmentEnd = ItrPhdr.p_vaddr - BaseAddress + ItrPhdr.p_memsz;
-        ElfAppSize = MAX(ElfAppSize, SegmentEnd);
-    }
-
-    debug("BaseAddress: %#lx Size: %ld", BaseAddress, ElfAppSize);
-
-    Elf64_Dyn *_GOTEntry = (Elf64_Dyn *)ELFGetDynamicTag(ElfFile, DT_PLTGOT);
-    Elf64_Dyn *_Rela = ELFGetDynamicTag(ElfFile, DT_RELA);
-    Elf64_Dyn *_RelaEnt = ELFGetDynamicTag(ElfFile, DT_RELAENT);
-    Elf64_Dyn *_JmpRel = ELFGetDynamicTag(ElfFile, DT_JMPREL);
-    Elf64_Dyn *_SymTab = ELFGetDynamicTag(ElfFile, DT_SYMTAB);
-    Elf64_Dyn *_StrTab = ELFGetDynamicTag(ElfFile, DT_STRTAB);
-    Elf64_Dyn *RelaSize = ELFGetDynamicTag(ElfFile, DT_RELASZ);
-    Elf64_Dyn *PltRelSize = ELFGetDynamicTag(ElfFile, DT_PLTRELSZ);
-
-    Elf64_Addr *GOTEntry = (Elf64_Addr *)((uintptr_t)(_GOTEntry->d_un.d_ptr - BaseAddress) + (uintptr_t)MemoryImage);
-    Elf64_Dyn *Rela = (Elf64_Dyn *)((uintptr_t)(_Rela->d_un.d_ptr - BaseAddress) + (uintptr_t)MemoryImage);
-    Elf64_Dyn *RelaEnt = (Elf64_Dyn *)((uintptr_t)(_RelaEnt->d_un.d_ptr - BaseAddress) + (uintptr_t)MemoryImage);
-    Elf64_Dyn *JmpRel = (Elf64_Dyn *)((uintptr_t)(_JmpRel->d_un.d_ptr - BaseAddress) + (uintptr_t)MemoryImage);
-    Elf64_Dyn *SymTab = (Elf64_Dyn *)((uintptr_t)(_SymTab->d_un.d_ptr - BaseAddress) + (uintptr_t)MemoryImage);
-    Elf64_Dyn *StrTab = (Elf64_Dyn *)((uintptr_t)(_StrTab->d_un.d_ptr - BaseAddress) + (uintptr_t)MemoryImage);
-
-    debug("GOTEntry: %#lx [%#lx]", _GOTEntry, GOTEntry);
-    debug("Rela: %#lx [%#lx]", _Rela, Rela);
-    debug("RelaEnt: %#lx [%#lx]", _RelaEnt, RelaEnt);
-    debug("JmpRel: %#lx [%#lx]", _JmpRel, JmpRel);
-    debug("SymTab: %#lx [%#lx]", _SymTab, SymTab);
-    debug("StrTab: %#lx [%#lx]", _StrTab, StrTab);
-    if (RelaSize)
-        debug("RelaSize: %ld", RelaSize->d_un.d_val);
-    if (PltRelSize)
-        debug("PltRelSize: %ld", PltRelSize->d_un.d_val);
-
-    Elf64_Xword PltRelSizeVal = PltRelSize ? PltRelSize->d_un.d_val : 0;
-    Elf64_Xword RelaSizeVal = RelaSize ? RelaSize->d_un.d_val : 0;
-
-    Elf64_Xword PltRelSizeValCount = PltRelSizeVal / sizeof(Elf64_Rela);
-    Elf64_Xword RelaSizeValCount = RelaSizeVal / sizeof(Elf64_Rela);
-
-    debug("PltRelSizeVal: %ld", PltRelSizeVal);
-    debug("RelaSizeVal: %ld", RelaSizeVal);
-    debug("PltRelSizeValCount: %ld", PltRelSizeValCount);
-    debug("RelaSizeValCount: %ld", RelaSizeValCount);
-
-    for (Elf64_Xword i = 0; i < PltRelSizeValCount; i++)
-    {
-        Elf64_Rela *RelaF = (Elf64_Rela *)((uintptr_t)JmpRel + i);
-        Elf64_Xword RelaType = ELF64_R_TYPE(RelaF->r_info);
-        debug("Itr %ld Type %ld", i, RelaType);
-
-        switch (RelaType)
-        {
-        case R_X86_64_NONE:
-        {
-            debug("No relocation needed");
-            break;
-        }
-        case R_X86_64_JUMP_SLOT:
-        {
-            debug("Relocation for jump slot");
-            Elf64_Xword SymIndex = ELF64_R_SYM(RelaF->r_info);
-            Elf64_Sym *Sym = (Elf64_Sym *)((uintptr_t)SymTab + SymIndex);
-            char *SymName = (char *)((uintptr_t)StrTab + Sym->st_name);
-            debug("Symbol %s at %#lx", SymName, Sym->st_value);
-
-            Elf64_Addr *GOTEntry = (Elf64_Addr *)RelaF->r_offset;
-            if (Sym->st_value)
-            {
-                fixme("Not implemented");
-                *GOTEntry = (Elf64_Addr)ElfFile + Sym->st_value;
-            }
-            // else
-            // *GOTEntry = (Elf64_Addr)ElfLazyResolver;
-
-            // Elf64_Sym *Sym = (Elf64_Sym *)((uintptr_t)ElfFile + (uintptr_t)SymTab + ELF64_R_SYM(RelaF->r_info) * sizeof(Elf64_Sym));
-            // char *SymName = (char *)((uintptr_t)ElfFile + (uintptr_t)StrTab + Sym->st_name);
-            // void *SymAddr = (void *)Lib->Address + Sym->st_value;
-            // debug("Symbol %s at %#lx", SymName, SymAddr);
-            // *(void **)(RelaF->r_offset + (uintptr_t)ElfFile) = SymAddr;
-            break;
-        }
-        case R_X86_64_RELATIVE:
-        {
-            debug("Relative relocation");
-            uintptr_t *Ptr = (uintptr_t *)((uintptr_t)ElfFile + RelaF->r_offset);
-            *Ptr = (uintptr_t)MemoryImage + RelaF->r_addend;
-            break;
-        }
-        default:
-        {
-            fixme("RelaType %d", RelaType);
-            break;
-        }
-        }
-    }
-
-    for (Elf64_Xword i = 0; i < RelaSizeValCount; i++)
-    {
-        Elf64_Rela *RelaF = (Elf64_Rela *)((uintptr_t)ElfFile + (uintptr_t)Rela + i);
-        Elf64_Xword RelaType = ELF64_R_TYPE(RelaF->r_info);
-        debug("Itr %ld Type %ld", i, RelaType);
-
-        switch (RelaType)
-        {
-        case R_X86_64_NONE:
-        {
-            debug("No relocation needed");
-            break;
-        }
-        case R_X86_64_64:
-        {
-            debug("64-bit relocation");
-            Elf64_Xword SymIndex = ELF64_R_SYM(RelaF->r_info);
-            Elf64_Sym *Sym = (Elf64_Sym *)((uintptr_t)ElfFile + (uintptr_t)SymTab + SymIndex);
-            char *SymName = (char *)((uintptr_t)ElfFile + (uintptr_t)StrTab + Sym->st_name);
-            debug("Symbol %s at %#lx", SymName, Sym->st_value);
-
-            uintptr_t *Ptr = (uintptr_t *)((uintptr_t)ElfFile + RelaF->r_offset);
-            *Ptr = (uintptr_t)MemoryImage + Sym->st_value + RelaF->r_addend;
-            break;
-        }
-        case R_X86_64_GLOB_DAT:
-        {
-            debug("Global data relocation");
-            Elf64_Xword SymIndex = ELF64_R_SYM(RelaF->r_info);
-            Elf64_Sym *Sym = (Elf64_Sym *)((uintptr_t)ElfFile + (uintptr_t)SymTab + SymIndex);
-            char *SymName = (char *)((uintptr_t)ElfFile + (uintptr_t)StrTab + Sym->st_name);
-            debug("Symbol %s at %#lx", SymName, Sym->st_value);
-
-            uintptr_t *Ptr = (uintptr_t *)((uintptr_t)ElfFile + RelaF->r_offset);
-            *Ptr = (uintptr_t)MemoryImage + Sym->st_value;
-            break;
-        }
-        case R_X86_64_RELATIVE:
-        {
-            debug("Relative relocation");
-            Elf64_Xword SymIndex = ELF64_R_SYM(RelaF->r_info);
-            Elf64_Sym *Sym = (Elf64_Sym *)((uintptr_t)ElfFile + (uintptr_t)SymTab + SymIndex);
-            char *SymName = (char *)((uintptr_t)ElfFile + (uintptr_t)StrTab + Sym->st_name);
-            debug("Symbol %s at %#lx", SymName, Sym->st_value);
-
-            uintptr_t *Ptr = (uintptr_t *)((uintptr_t)ElfFile + RelaF->r_offset);
-            *Ptr = (uintptr_t)MemoryImage + RelaF->r_addend;
-            break;
-        }
-        default:
-        {
-            fixme("RelaType %d", RelaType);
-            break;
-        }
-        }
-    }
-    return true;
-}
-*/
-
-/*
-
-        ELFDynamicReallocation(ElfFile, MemoryImage);
-
-        LibAddressCollection *LibsForLazyResolver = (LibAddressCollection *)ELFBase.TmpMem->RequestPages(TO_PAGES(sizeof(LibAddressCollection)), true);
-        memset(LibsForLazyResolver, 0, sizeof(LibAddressCollection));
-        LibAddressCollection *LFLRTmp = LibsForLazyResolver;
-        debug("LibsForLazyResolver: %#lx", LibsForLazyResolver);
-
-        if (NeededLibraries.size() > 0)
-        {
-            VirtualFileSystem::Node *ParentNode = ExFile->Node->Parent; // Working Directory
-            if (ParentNode)
-            {
-                char *WorkingDirAbsolutePath = vfs->GetPathFromNode(ParentNode);
-                debug("Working directory: \"%s\"", WorkingDirAbsolutePath);
-
-                int LibCount = 0;
-                foreach (auto Library in NeededLibraries)
-                {
-                    char LibPath[256];
-                    strcpy(LibPath, WorkingDirAbsolutePath);
-                    strcat(LibPath, "/");
-                    strcat(LibPath, Library);
-                    debug("Searching for \"%s\"...", LibPath);
-
-                    bool AlreadyTried = false;
-
-                LibPathRetry:
-                    VirtualFileSystem::FILE *LibNode = vfs->Open(LibPath);
-
-                    if (LibNode->Status != VirtualFileSystem::FileStatus::OK)
-                    {
-                        vfs->Close(LibNode);
-                        if (!AlreadyTried)
-                        {
-                            debug("Library \"%s\" not found, retrying... (%#x)", LibPath, LibNode->Status);
-                            memset(LibPath, 0, 256);
-                            strcpy(LibPath, "/system/lib/");
-                            strcat(LibPath, Library);
-                            AlreadyTried = true;
-                            goto LibPathRetry;
-                        }
-                        else
-                            warn("Failed to load library \"%s\" (%#x)", Library, LibNode->Status);
-                    }
-                    else
-                    {
-                        debug("Library found \"%s\" (%#x)", LibPath, LibNode->Status);
-                        SharedLibraries *sl = AddLibrary(Library, (void *)LibNode->Node->Address, LibNode->Node->Length);
-                        strcpy(LFLRTmp->Name, Library);
-                        LFLRTmp->ElfFile = (uintptr_t *)sl->Address;
-                        LFLRTmp->MemoryImage = (uintptr_t *)sl->MemoryImage;
-                        LFLRTmp->ParentElfFile = (uintptr_t *)ElfFile;
-                        LFLRTmp->ParentMemoryImage = (uintptr_t *)MemoryImage;
-                        LFLRTmp->Valid = true;
-                        debug("LIBRARY: %s, %#lx, %#lx", Library, LFLRTmp->ElfFile, LFLRTmp->MemoryImage);
-
-                        LFLRTmp->Next = (LibAddressCollection *)ELFBase.TmpMem->RequestPages(TO_PAGES(sizeof(LibAddressCollection)), true);
-                        LFLRTmp = LFLRTmp->Next;
-                        memset(LFLRTmp, 0, sizeof(LibAddressCollection));
-                    }
-                }
-            }
-            else
-            {
-                error("Couldn't get the parent node from path %s", vfs->GetPathFromNode(ExFile->Node));
-            }
-        }
-
-        ELFAddLazyResolverToGOT(ElfFile, MemoryImage, LibsForLazyResolver);
-*/
 
 struct InterpreterIPCDataLibrary
 {
@@ -687,6 +468,8 @@ int ld_load(int argc, char *argv[], char *envp[])
             LibsForLazyResolver->Valid = true;
             LibsForLazyResolver->ElfFile = (uintptr_t)lib_addr;
             LibsForLazyResolver->MemoryImage = (uintptr_t)lib_mm_image;
+            LibsForLazyResolver->ParentElfFile = (uintptr_t)IPCBuffer->ElfFile;
+            LibsForLazyResolver->ParentMemoryImage = (uintptr_t)IPCBuffer->MemoryImage;
             for (size_t j = 0; j < 32; j++)
                 LibsForLazyResolver->Name[j] = IPCBuffer->Libraries[i].Name[j];
 
@@ -702,6 +485,8 @@ int ld_load(int argc, char *argv[], char *envp[])
         CurrentLibsForLazyResolver->Valid = true;
         CurrentLibsForLazyResolver->ElfFile = (uintptr_t)lib_addr;
         CurrentLibsForLazyResolver->MemoryImage = (uintptr_t)lib_mm_image;
+        LibsForLazyResolver->ParentElfFile = (uintptr_t)IPCBuffer->ElfFile;
+        LibsForLazyResolver->ParentMemoryImage = (uintptr_t)IPCBuffer->MemoryImage;
         for (size_t j = 0; j < 32; j++)
             CurrentLibsForLazyResolver->Name[j] = IPCBuffer->Libraries[i].Name[j];
 
@@ -717,7 +502,7 @@ int ld_load(int argc, char *argv[], char *envp[])
         return -0x607;
     }
 
-    Elf64_Addr Entry = ((Elf64_Ehdr *)IPCBuffer->MemoryImage)->e_entry;
+    Elf64_Addr Entry = ((Elf64_Ehdr *)IPCBuffer->ElfFile)->e_entry;
 
     IPC(IPC_DELETE, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
     FreePages((uintptr_t)IPCBuffer, PagesForIPCDataStruct);
