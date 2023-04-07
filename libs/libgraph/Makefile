@@ -27,7 +27,9 @@ else ifeq ($(OSARCH), i386)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -fPIE -I../include -I../../libc/include
+SIMD_FLAGS := -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-sse4 -mno-avx -mno-avx2 -mno-avx512f
+
+CFLAGS := -fPIC -fPIE -I../include -I../../libc/include $(SIMD_FLAGS)
 
 build: $(OBJECT_NAME)
 

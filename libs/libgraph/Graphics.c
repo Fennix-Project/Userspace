@@ -1,7 +1,15 @@
+#include <libdraw.h>
 
 #include "../../../Kernel/syscalls.h"
 
-int stub()
+void DrawRect(int x, int y, int w, int h, int color)
 {
-    return 0;
+    int i, j;
+    for (i = 0; i < w; i++)
+    {
+        for (j = 0; j < h; j++)
+        {
+            // TODO: DrawPixel(x + i, y + j, color);
+        }
+    }
 }
