@@ -16,42 +16,45 @@ typedef __UINT32_TYPE__ Elf64_Word;
 typedef __UINT64_TYPE__ Elf64_Xword;
 typedef __INT64_TYPE__ Elf64_Sxword;
 
-#define SHT_NULL 0
-#define SHT_PROGBITS 1
-#define SHT_SYMTAB 2
-#define SHT_STRTAB 3
-#define SHT_RELA 4
-#define SHT_HASH 5
-#define SHT_DYNAMIC 6
-#define SHT_NOTE 7
-#define SHT_NOBITS 8
-#define SHT_REL 9
-#define SHT_SHLIB 10
-#define SHT_DYNSYM 11
-#define SHT_INIT_ARRAY 14
-#define SHT_FINI_ARRAY 15
-#define SHT_PREINIT_ARRAY 16
-#define SHT_GROUP 17
-#define SHT_SYMTAB_SHNDX 18
-#define SHT_NUM 19
-#define SHT_LOOS 0x60000000
-#define SHT_GNU_ATTRIBUTES 0x6ffffff5
-#define SHT_GNU_HASH 0x6ffffff6
-#define SHT_GNU_LIBLIST 0x6ffffff7
-#define SHT_CHECKSUM 0x6ffffff8
-#define SHT_LOSUNW 0x6ffffffa
-#define SHT_SUNW_move 0x6ffffffa
-#define SHT_SUNW_COMDAT 0x6ffffffb
-#define SHT_SUNW_syminfo 0x6ffffffc
-#define SHT_GNU_verdef 0x6ffffffd
-#define SHT_GNU_verneed 0x6ffffffe
-#define SHT_GNU_versym 0x6fffffff
-#define SHT_HISUNW 0x6fffffff
-#define SHT_HIOS 0x6fffffff
-#define SHT_LOPROC 0x70000000
-#define SHT_HIPROC 0x7fffffff
-#define SHT_LOUSER 0x80000000
-#define SHT_HIUSER 0x8fffffff
+enum SectionHeaderType
+{
+    SHT_NULL = 0,
+    SHT_PROGBITS = 1,
+    SHT_SYMTAB = 2,
+    SHT_STRTAB = 3,
+    SHT_RELA = 4,
+    SHT_HASH = 5,
+    SHT_DYNAMIC = 6,
+    SHT_NOTE = 7,
+    SHT_NOBITS = 8,
+    SHT_REL = 9,
+    SHT_SHLIB = 10,
+    SHT_DYNSYM = 11,
+    SHT_INIT_ARRAY = 14,
+    SHT_FINI_ARRAY = 15,
+    SHT_PREINIT_ARRAY = 16,
+    SHT_GROUP = 17,
+    SHT_SYMTAB_SHNDX = 18,
+    SHT_NUM = 19,
+    SHT_LOOS = 0x60000000,
+    SHT_GNU_ATTRIBUTES = 0x6ffffff5,
+    SHT_GNU_HASH = 0x6ffffff6,
+    SHT_GNU_LIBLIST = 0x6ffffff7,
+    SHT_CHECKSUM = 0x6ffffff8,
+    SHT_LOSUNW = 0x6ffffffa,
+    SHT_SUNW_move = 0x6ffffffa,
+    SHT_SUNW_COMDAT = 0x6ffffffb,
+    SHT_SUNW_syminfo = 0x6ffffffc,
+    SHT_GNU_verdef = 0x6ffffffd,
+    SHT_GNU_verneed = 0x6ffffffe,
+    SHT_GNU_versym = 0x6fffffff,
+    SHT_HISUNW = 0x6fffffff,
+    SHT_HIOS = 0x6fffffff,
+    SHT_LOPROC = 0x70000000,
+    SHT_HIPROC = 0x7fffffff,
+    SHT_LOUSER = 0x80000000,
+    SHT_HIUSER = 0x8fffffff
+};
 
 #define ELF32_R_SYM(i) ((i) >> 8)
 #define ELF32_R_TYPE(i) ((unsigned char)(i))
@@ -63,7 +66,10 @@ typedef __INT64_TYPE__ Elf64_Sxword;
 
 #define EI_NIDENT 16
 
-enum DynamicArrayTags
+#define SHN_UNDEF 0
+#define SHN_ABS 0xfff1
+
+enum DynamicTags
 {
     DT_NULL = 0,
     DT_NEEDED = 1,
@@ -287,6 +293,6 @@ typedef struct elf64_sym
     Elf64_Xword st_size;
 } Elf64_Sym;
 
-struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicArrayTags Tag);
+struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicTags Tag);
 
 #endif // !__FENNIX_LIB_ELF_LAZY_RESOLVE_H__

@@ -138,7 +138,7 @@ void PrintNL(char *String)
     Print("\n");
 }
 
-void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
+void *memcpy(void *dest, const void *src, size_t n)
 {
     uint8_t *d = dest;
     const uint8_t *s = src;
@@ -147,7 +147,7 @@ void *memcpy(void *dest, const void *src, __SIZE_TYPE__ n)
     return dest;
 }
 
-void *memset(void *s, int c, __SIZE_TYPE__ n)
+void *memset(void *s, int c, size_t n)
 {
     uint8_t *p = s;
     while (n--)
@@ -161,7 +161,7 @@ int strcmp(const char *l, const char *r)
     return *(unsigned char *)l - *(unsigned char *)r;
 }
 
-struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicArrayTags Tag)
+struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicTags Tag)
 {
     Elf64_Ehdr *ELFHeader = (Elf64_Ehdr *)ElfFile;
 
@@ -172,39 +172,72 @@ struct Elf64_Dyn *ELFGetDynamicTag(void *ElfFile, enum DynamicArrayTags Tag)
         if (ItrProgramHeader.p_type == PT_DYNAMIC)
         {
             struct Elf64_Dyn *Dynamic = (struct Elf64_Dyn *)((uint8_t *)ElfFile + ItrProgramHeader.p_offset);
-            for (__SIZE_TYPE__ i = 0; i < ItrProgramHeader.p_filesz / sizeof(struct Elf64_Dyn); i++)
+            for (size_t i = 0; i < ItrProgramHeader.p_filesz / sizeof(struct Elf64_Dyn); i++)
             {
                 if (Dynamic[i].d_tag == Tag)
-                {
-                    // debug("Found dynamic tag %d at %#lx [d_val: %#lx].", Tag, &Dynamic[i], Dynamic[i].d_un.d_val);
                     return &Dynamic[i];
-                }
                 if (Dynamic[i].d_tag == DT_NULL)
-                {
-                    // debug("Reached end of dynamic tag list for tag %d.", Tag);
                     return (void *)0;
-                }
             }
         }
     }
-    // debug("Dynamic tag %d not found.", Tag);
     return (void *)0;
 }
 
-Elf64_Sym *ELFGetSymbol(uintptr_t ElfFile, char *SymbolName)
+Elf64_Shdr *GetELFSheader(Elf64_Ehdr *Header)
 {
-    struct Elf64_Dyn *symTab = ELFGetDynamicTag((void *)ElfFile, DT_SYMTAB);
-    struct Elf64_Dyn *strTab = ELFGetDynamicTag((void *)ElfFile, DT_STRTAB);
-    Elf64_Sym *DynSym = (Elf64_Sym *)(ElfFile + symTab->d_un.d_ptr);
-    char *dynStr = (char *)(ElfFile + strTab->d_un.d_ptr);
+    Elf64_Off SheaderOffset = Header->e_shoff;
+    return (Elf64_Shdr *)((uintptr_t)Header + SheaderOffset);
+}
 
-    for (int i = 0; i < symTab->d_un.d_val; i++)
+Elf64_Shdr *GetELFSection(Elf64_Ehdr *Header, uint64_t Index)
+{
+    Elf64_Shdr *Sheader = GetELFSheader(Header);
+    return &Sheader[Index];
+}
+
+char *GetELFStringTable(Elf64_Ehdr *Header)
+{
+    if (Header->e_shstrndx == SHN_UNDEF)
+        return NULL;
+    return (char *)Header + GetELFSection(Header, Header->e_shstrndx)->sh_offset;
+}
+
+Elf64_Sym *ELFLookupSymbol(Elf64_Ehdr *Header, const char *Name)
+{
+    Elf64_Shdr *SymbolTable = NULL;
+    Elf64_Shdr *StringTable = NULL;
+    Elf64_Sym *Symbol = NULL;
+    char *String = NULL;
+
+    for (Elf64_Half i = 0; i < Header->e_shnum; i++)
     {
-        if (strcmp(dynStr + DynSym[i].st_name, SymbolName) == 0)
-            return &DynSym[i];
+        Elf64_Shdr *shdr = GetELFSection(Header, i);
+        switch (shdr->sh_type)
+        {
+        case SHT_SYMTAB:
+            SymbolTable = shdr;
+            StringTable = GetELFSection(Header, shdr->sh_link);
+            break;
+        default:
+        {
+            break;
+        }
+        }
     }
-    PrintNL("ELFGetSymbol: Symbol not found!");
-    return (Elf64_Sym *)0;
+
+    if (SymbolTable == NULL || StringTable == NULL)
+        return NULL;
+
+    for (size_t i = 0; i < (SymbolTable->sh_size / sizeof(Elf64_Sym)); i++)
+    {
+        Symbol = (Elf64_Sym *)((uintptr_t)Header + SymbolTable->sh_offset + (i * sizeof(Elf64_Sym)));
+        String = (char *)((uintptr_t)Header + StringTable->sh_offset + Symbol->st_name);
+
+        if (strcmp(String, Name) == 0)
+            return (void *)Symbol;
+    }
+    return NULL;
 }
 
 void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))()
@@ -249,22 +282,6 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
 
                 app_BaseAddress = MIN(app_BaseAddress, ItrProgramHeader.p_vaddr);
             }
-
-            ltoa((long)CurLib->MemoryImage, DbgBuff, 16);
-            Print("lib:mmImg 0x");
-            PrintNL(DbgBuff);
-
-            ltoa((long)CurLib->ParentMemoryImage, DbgBuff, 16);
-            Print("lib:mmImg 0x");
-            PrintNL(DbgBuff);
-
-            ltoa(lib_BaseAddress, DbgBuff, 16);
-            Print("lib:BAddr 0x");
-            PrintNL(DbgBuff);
-
-            ltoa(app_BaseAddress, DbgBuff, 16);
-            Print("lib:BAddr 0x");
-            PrintNL(DbgBuff);
 
             struct Elf64_Dyn *lib_JmpRel = ELFGetDynamicTag((void *)CurLib->ElfFile, DT_JMPREL);
             struct Elf64_Dyn *lib_SymTab = ELFGetDynamicTag((void *)CurLib->ElfFile, DT_SYMTAB);
@@ -339,7 +356,12 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
                     Print("SymName: ");
                     PrintNL(SymName);
 
-                    Elf64_Sym *LibSym = ELFGetSymbol(CurLib->ElfFile, SymName);
+                    Elf64_Sym *LibSym = ELFLookupSymbol(CurLib->ElfFile, SymName);
+
+                    Print("LibSym: 0x");
+                    ltoa((long)LibSym, DbgBuff, 16);
+                    PrintNL(DbgBuff);
+
                     if (LibSym)
                     {
                         *GOTEntry = (Elf64_Addr)(CurLib->MemoryImage + LibSym->st_value);
@@ -351,6 +373,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
                         Lock = 0;
                         return (void (*)()) * GOTEntry;
                     }
+                    PrintNL("Not found in lib");
                 }
                 break;
             }
