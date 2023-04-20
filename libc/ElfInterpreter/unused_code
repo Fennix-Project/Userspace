@@ -1,6 +1,5 @@
 
 /* This function is a mess and needs to be cleaned up. */
-/*
 bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
 {
     debug("ELF dynamic reallocation for image at %#lx.", ElfFile);
@@ -177,9 +176,7 @@ bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
     }
     return true;
 }
-*/
 
-/*
 
         ELFDynamicReallocation(ElfFile, MemoryImage);
 
@@ -250,4 +247,4 @@ bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
         }
 
         ELFAddLazyResolverToGOT(ElfFile, MemoryImage, LibsForLazyResolver);
-*/
+

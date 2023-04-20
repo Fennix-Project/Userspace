@@ -246,16 +246,16 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
     if (Info)
     {
         struct LibAddressCollection *CurLib = Info;
-        PrintNL("_______");
+        // PrintNL("_______");
         // The last entry is the null entry (Valid == false) which determines the end of the list.
         while (CurLib->Valid)
         {
-            Print("-- ");
-            Print(CurLib->Name);
-            Print(" ");
-            ltoa(RelIndex, DbgBuff, 10);
-            Print(DbgBuff);
-            PrintNL(" --");
+            // Print("-- ");
+            // Print(CurLib->Name);
+            // Print(" ");
+            // ltoa(RelIndex, DbgBuff, 10);
+            // Print(DbgBuff);
+            // PrintNL(" --");
             uintptr_t lib_BaseAddress = __UINTPTR_MAX__;
             uintptr_t app_BaseAddress = __UINTPTR_MAX__;
 
@@ -335,7 +335,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             {
             case R_X86_64_NONE:
             {
-                PrintNL("R_X86_64_NONE");
+                // PrintNL("R_X86_64_NONE");
                 if (*GOTEntry == 0)
                 {
                     PrintNL("GOTEntry is 0");
@@ -346,34 +346,34 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             }
             case R_X86_64_JUMP_SLOT:
             {
-                PrintNL("R_X86_64_JUMP_SLOT");
+                // PrintNL("R_X86_64_JUMP_SLOT");
                 int SymIndex = ELF64_R_SYM(Rel->r_info);
                 Elf64_Sym *Sym = _app_SymTab + SymIndex;
 
                 if (Sym->st_name)
                 {
                     char *SymName = app_DynStr + Sym->st_name;
-                    Print("SymName: ");
-                    PrintNL(SymName);
+                    // Print("SymName: ");
+                    // PrintNL(SymName);
 
                     Elf64_Sym *LibSym = ELFLookupSymbol(CurLib->ElfFile, SymName);
 
-                    Print("LibSym: 0x");
-                    ltoa((long)LibSym, DbgBuff, 16);
-                    PrintNL(DbgBuff);
+                    // Print("LibSym: 0x");
+                    // ltoa((long)LibSym, DbgBuff, 16);
+                    // PrintNL(DbgBuff);
 
                     if (LibSym)
                     {
                         *GOTEntry = (Elf64_Addr)(CurLib->MemoryImage + LibSym->st_value);
 
-                        ltoa(*GOTEntry, DbgBuff, 16);
-                        Print("*GOTEntry: 0x");
-                        PrintNL(DbgBuff);
+                        // ltoa(*GOTEntry, DbgBuff, 16);
+                        // Print("*GOTEntry: 0x");
+                        // PrintNL(DbgBuff);
 
                         Lock = 0;
                         return (void (*)()) * GOTEntry;
                     }
-                    PrintNL("Not found in lib");
+                    // PrintNL("Not found in lib");
                 }
                 break;
             }
@@ -387,7 +387,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             }
 
         RetryNextLib:
-            PrintNL("Retrying next lib");
+            // PrintNL("Retrying next lib");
             CurLib = CurLib->Next;
         }
     }
@@ -508,8 +508,8 @@ int ld_load(int argc, char *argv[], char *envp[])
         CurrentLibsForLazyResolver->Valid = true;
         CurrentLibsForLazyResolver->ElfFile = (uintptr_t)lib_addr;
         CurrentLibsForLazyResolver->MemoryImage = (uintptr_t)lib_mm_image;
-        LibsForLazyResolver->ParentElfFile = (uintptr_t)IPCBuffer->ElfFile;
-        LibsForLazyResolver->ParentMemoryImage = (uintptr_t)IPCBuffer->MemoryImage;
+        CurrentLibsForLazyResolver->ParentElfFile = (uintptr_t)IPCBuffer->ElfFile;
+        CurrentLibsForLazyResolver->ParentMemoryImage = (uintptr_t)IPCBuffer->MemoryImage;
         for (size_t j = 0; j < 32; j++)
             CurrentLibsForLazyResolver->Name[j] = IPCBuffer->Libraries[i].Name[j];
 

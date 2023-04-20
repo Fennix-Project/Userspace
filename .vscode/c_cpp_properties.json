@@ -54,7 +54,10 @@
         {
             "name": "Fennix x32 (Linux, GCC, debug)",
             "includePath": [
-                "${workspaceFolder}/include/**"
+                "${workspaceFolder}/libc/include/**",
+                "${workspaceFolder}/out/system/include/**",
+                "${workspaceFolder}/libs/include/**",
+                "${workspaceFolder}/libs/include"
             ],
             "defines": [
                 "__debug_vscode__",
