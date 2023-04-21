@@ -24,12 +24,12 @@ void FileClose(File *File)
     KrnlFreePages((uintptr_t)File, sizeof(File) / __FILE_GetPageSize() + 1);
 }
 
-uint64_t FileRead(File *File, uint8_t *Buffer, uint64_t Size)
+uint64_t FileRead(File *File, uint64_t Offset, uint8_t *Buffer, uint64_t Size)
 {
     return syscall3(_FileRead, (uint64_t)File->KernelPrivate, (uint64_t)Buffer, Size);
 }
 
-uint64_t FileWrite(File *File, uint8_t *Buffer, uint64_t Size)
+uint64_t FileWrite(File *File, uint64_t Offset, uint8_t *Buffer, uint64_t Size)
 {
     return syscall3(_FileWrite, (uint64_t)File->KernelPrivate, (uint64_t)Buffer, Size);
 }

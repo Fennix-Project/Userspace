@@ -17,8 +17,6 @@ void PutCharToKernelConsole(char c)
 
 int main(int argc, char *argv[], char *envp[])
 {
-    for (int i = 0; i < 14; i++)
-        PutCharToKernelConsole("\nHello World!\n"[i]);
     print("%p %p %p\n", (void *)(uint64_t)&argc, (void *)&argv, (void *)&envp);
     print("I have %d arguments\n", argc);
     for (int i = 0; i < argc; i++)
@@ -49,7 +47,7 @@ int main(int argc, char *argv[], char *envp[])
     }
 
     char buf[1024];
-    uint64_t read = FileRead(test, (uint8_t *)buf, 1024);
+    uint64_t read = FileRead(test, 0, (uint8_t *)buf, 1024);
     print("Read %ld bytes from file\n", read);
     print("File contents: %s\n", buf);
     FileClose(test);

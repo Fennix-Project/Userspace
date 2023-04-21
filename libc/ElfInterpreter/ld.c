@@ -126,17 +126,20 @@ static inline void PutCharToKernelConsole(char c)
                          : "rcx", "r11", "memory");
 }
 
-void Print(char *String)
+void Print__(char *String)
 {
     for (short i = 0; String[i] != '\0'; i++)
         PutCharToKernelConsole(String[i]);
 }
 
-void PrintNL(char *String)
+void PrintNL__(char *String)
 {
-    Print(String);
-    Print("\n");
+    Print__(String);
+    Print__("\n");
 }
+
+#define Print(x) Print__(x)
+#define PrintNL(x) PrintNL__(x)
 
 void *memcpy(void *dest, const void *src, size_t n)
 {
@@ -338,7 +341,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
                 // PrintNL("R_X86_64_NONE");
                 if (*GOTEntry == 0)
                 {
-                    PrintNL("GOTEntry is 0");
+                    // PrintNL("GOTEntry is 0");
                     break;
                 }
                 Lock = 0;
@@ -473,7 +476,7 @@ int ld_load(int argc, char *argv[], char *envp[])
             break;
 
         uintptr_t lib_addr = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
-        uintptr_t lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
+        uintptr_t lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_MEMORY_IMAGE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
         if (lib_addr == 0 || lib_mm_image == 0)
         {
             enum SyscallsErrorCodes ret = KernelCTL(KCTL_REGISTER_ELF_LIB, (uint64_t)IPCBuffer->Libraries[i].Name, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0);
@@ -483,7 +486,7 @@ int ld_load(int argc, char *argv[], char *envp[])
                 return -0x11B;
             }
             lib_addr = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
-            lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_FILE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
+            lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_MEMORY_IMAGE, (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
         }
 
         if (LibsForLazyResolver->Next == NULL)

@@ -24,8 +24,8 @@ enum FileFlags
 
 File *FileOpen(const char *Path, uint64_t Flags);
 void FileClose(File *File);
-uint64_t FileRead(File *File, uint8_t *Buffer, uint64_t Size);
-uint64_t FileWrite(File *File, uint8_t *Buffer, uint64_t Size);
+uint64_t FileRead(File *File, uint64_t Offset, uint8_t *Buffer, uint64_t Size);
+uint64_t FileWrite(File *File, uint64_t Offset, uint8_t *Buffer, uint64_t Size);
 uint64_t FileSeek(File *File, uint64_t Offset, uint64_t Whence);
 uint64_t FileStatus(File *File);
 
