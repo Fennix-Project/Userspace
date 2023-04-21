@@ -39,6 +39,11 @@ enum KCtl
      * @fn uintptr_t GetELFLib(char *Identifier);
      */
     KCTL_GET_ELF_LIB_MEMORY_IMAGE,
+
+    KCTL_GET_FRAMEBUFFER_BUFFER,
+    KCTL_GET_FRAMEBUFFER_WIDTH,
+    KCTL_GET_FRAMEBUFFER_HEIGHT,
+    KCTL_GET_FRAMEBUFFER_SIZE,
 };
 
 long DoCtl(uint64_t Command, uint64_t Arg1, uint64_t Arg2, uint64_t Arg3, uint64_t Arg4);
