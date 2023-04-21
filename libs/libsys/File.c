@@ -26,12 +26,12 @@ void FileClose(File *File)
 
 uint64_t FileRead(File *File, uint64_t Offset, uint8_t *Buffer, uint64_t Size)
 {
-    return syscall3(_FileRead, (uint64_t)File->KernelPrivate, (uint64_t)Buffer, Size);
+    return syscall4(_FileRead, (uint64_t)File->KernelPrivate, Offset, (uint64_t)Buffer, Size);
 }
 
 uint64_t FileWrite(File *File, uint64_t Offset, uint8_t *Buffer, uint64_t Size)
 {
-    return syscall3(_FileWrite, (uint64_t)File->KernelPrivate, (uint64_t)Buffer, Size);
+    return syscall4(_FileWrite, (uint64_t)File->KernelPrivate, Offset, (uint64_t)Buffer, Size);
 }
 
 uint64_t FileSeek(File *File, uint64_t Offset, uint64_t Whence)
