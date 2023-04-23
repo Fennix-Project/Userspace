@@ -8,10 +8,14 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-typedef struct
+struct _IO_FILE
 {
-    int unused;
-} FILE;
+    size_t offset;
+
+    void *KernelPrivate;
+};
+
+typedef struct _IO_FILE FILE;
 
 #ifdef __cplusplus
 extern "C"
@@ -22,15 +26,15 @@ extern "C"
     extern FILE *stdout;
     extern FILE *stderr;
 
-    int fclose(FILE *stream);
-    int fflush(FILE *stream);
     FILE *fopen(const char *filename, const char *mode);
-    int fprintf(FILE *stream, const char *format, ...);
-    int printf(const char *format, ...);
     size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+    size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
     int fseek(FILE *stream, long offset, int whence);
     long ftell(FILE *stream);
-    size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+    int fclose(FILE *fp);
+    int fflush(FILE *stream);
+    int fprintf(FILE *stream, const char *format, ...);
+    int printf(const char *format, ...);
     void setbuf(FILE *stream, char *buf);
     int vfprintf(FILE *stream, const char *format, va_list arg);
     int vsscanf(const char *s, const char *format, va_list arg);
