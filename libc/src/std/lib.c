@@ -23,8 +23,7 @@ void exit(int status)
 
 int atoi(const char *nptr)
 {
-    // uint64_t Length = strlen((char *)nptr);
-    uint64_t Length = 0;
+    uint64_t Length = strlen((char *)nptr);
     if (nptr)
         while (nptr[Length] != '\0')
             ++Length;
@@ -61,4 +60,26 @@ void free(void *Address)
 {
     PREFIX(free)
     (Address);
+}
+
+int system(const char *command)
+{
+    return 0;
+}
+
+double atof(const char *nptr)
+{
+    // FIXME: This is a very bad implementation of atof.
+    uint64_t Length = strlen((char *)nptr);
+    if (nptr)
+        while (nptr[Length] != '\0')
+            ++Length;
+    double OutBuffer = 0;
+    double Power = 1;
+    for (uint64_t i = Length; i > 0; --i)
+    {
+        OutBuffer += (nptr[i - 1] - 48) * Power;
+        Power *= 10;
+    }
+    return OutBuffer;
 }

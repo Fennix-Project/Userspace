@@ -5,6 +5,8 @@
 #include <stddef.h>
 
 #define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 
 typedef struct
 {
@@ -31,9 +33,14 @@ extern "C"
     size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
     void setbuf(FILE *stream, char *buf);
     int vfprintf(FILE *stream, const char *format, va_list arg);
+    int vsscanf(const char *s, const char *format, va_list arg);
+    int sscanf(const char *s, const char *format, ...);
 
-    int puts(const char *s);
+    int fputc(int c, FILE *stream);
+    int putc(int c, FILE *stream);
+    int fputs(const char *s, FILE *stream);
     int putchar(int c);
+    int puts(const char *s);
 
 #ifdef __cplusplus
 }

@@ -18,6 +18,9 @@ extern "C"
     void *realloc(void *Address, size_t Size);
     void *calloc(size_t Count, size_t Size);
     void free(void *Address);
+    int system(const char *command);
+
+    double atof(const char *nptr);
 
 #ifdef __cplusplus
 }

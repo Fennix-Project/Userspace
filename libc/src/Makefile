@@ -19,6 +19,7 @@ ASM_SOURCES = $(shell find ./ -type f -name '*.asm')
 OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.S=.o}
 
 INCLUDE = ../include
+INCLUDE2 = ../../out/system/include
 
 ifeq ($(OSARCH), amd64)
 ASM_ARCH := elf64
@@ -26,7 +27,7 @@ else ifeq ($(OSARCH), i386)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -I$(INCLUDE)
+CFLAGS := -fPIC -I$(INCLUDE) -I$(INCLUDE2)
 
 build: $(OBJECT_NAME)
 

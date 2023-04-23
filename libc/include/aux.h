@@ -1,7 +1,7 @@
 #ifndef __FENNIX_LIBC_AUX_H__
 #define __FENNIX_LIBC_AUX_H__
 
-#include <types.h>
+#include <stddef.h>
 
 #define AT_NULL 0
 #define AT_IGNORE 1
@@ -44,11 +44,26 @@
 
 typedef struct
 {
-    unsigned long a_type;
+    uint32_t a_type;
     union
     {
-        unsigned long a_val;
+        uint32_t a_val;
+    } a_un;
+} Elf32_auxv_t;
+
+typedef struct
+{
+    uint64_t a_type;
+    union
+    {
+        uint64_t a_val;
     } a_un;
 } Elf64_auxv_t;
+
+#ifdef __LP64__
+#define Elf_auxv_t Elf64_auxv_t
+#else
+#define Elf_auxv_t Elf32_auxv_t
+#endif
 
 #endif // !__FENNIX_LIBC_AUX_H__
