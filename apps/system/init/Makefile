@@ -54,7 +54,7 @@ build: $(FILENAME)
 
 $(FILENAME): $(OBJ)
 	$(info Linking $@)
-	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -linit -lsys -lgraph -o $@
+	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -linit -o $@
 
 %.o: %.c $(HEADERS)
 	$(info Compiling $<)
