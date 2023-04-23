@@ -359,7 +359,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
                     // Print("SymName: ");
                     // PrintNL(SymName);
 
-                    Elf64_Sym *LibSym = ELFLookupSymbol(CurLib->ElfFile, SymName);
+                    Elf64_Sym *LibSym = ELFLookupSymbol((Elf64_Ehdr *)CurLib->ElfFile, SymName);
 
                     // Print("LibSym: 0x");
                     // ltoa((long)LibSym, DbgBuff, 16);
