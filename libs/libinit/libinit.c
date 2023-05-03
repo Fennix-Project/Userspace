@@ -1,4 +1,4 @@
-#include <init.h>
+#include <libinit/init.h>
 
 #include "printf.h"
 

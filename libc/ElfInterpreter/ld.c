@@ -1,6 +1,6 @@
 #include "ld.h"
 
-#include "../../libs/include/sysbase.h"
+#include "../../libs/include/libsys/base.h"
 #include "../../../Kernel/syscalls.h"
 #include "../../../Kernel/ipc.h"
 #include "elf.h"

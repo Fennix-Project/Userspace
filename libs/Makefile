@@ -1,5 +1,5 @@
 build:
-	cp include/* ../out/system/include
+	cp -r include/* ../out/system/include
 	make -C libgcc build
 	make -C libinit build
 	make -C libssp build

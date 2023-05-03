@@ -1,7 +1,8 @@
 #ifndef __FENNIX_LIBS_INIT_H__
 #define __FENNIX_LIBS_INIT_H__
 
-#include <types.h>
+#include <stddef.h>
+#include <stdarg.h>
 
 __attribute__((visibility("hidden"))) int printf_libinit(const char *format, ...);
 __attribute__((visibility("hidden"))) int vprintf_libinit(const char *format, va_list arg);

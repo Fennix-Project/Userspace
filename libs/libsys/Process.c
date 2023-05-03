@@ -1,5 +1,5 @@
-#include <sysbase.h>
-#include <sysproc.h>
+#include <libsys/base.h>
+#include <libsys/proc.h>
 
 #include "../../../Kernel/syscalls.h"
 
