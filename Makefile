@@ -8,6 +8,7 @@ else
 	mkdir -p out
 	mkdir -p out/system
 	mkdir -p out/system/lib
+	mkdir -p out/system/bin
 	mkdir -p out/system/include
 	make -C libc build
 	make -C libs build
