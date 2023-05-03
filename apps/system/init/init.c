@@ -1,8 +1,10 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <sys/wait.h>
 #include <aux.h>
 
-#include <init.h>
+#include <libinit/init.h>
 #define print(m, ...) init_log(m, ##__VA_ARGS__)
 
 void test_args(int argc, char *argv[], char *envp[])
@@ -42,8 +44,38 @@ int main(int argc, char *argv[], char *envp[])
 
     char buf[1024];
     int read = fread(buf, 1024, 1, test);
-    print("Read %ld bytes from file\n", read);
-    print("File contents: %s\n", buf);
+    print("/Test.txt (%ld): %s\n", read, buf);
     fclose(test);
+
+    pid_t pid;
+    int status;
+
+    pid = fork();
+
+    if (pid == 0) // Child process
+    {
+        print("Creating shell process\n");
+        char *args[] = {"/system/bin/sh", "--rcfile /home/default/.shrc", NULL};
+        execv(args[0], args);
+        exit(EXIT_FAILURE);
+    }
+    else if (pid > 0)
+    {
+        wait(&status);
+        if (WIFEXITED(status))
+        {
+            print("Child process exited with code: %d\n", WEXITSTATUS(status));
+        }
+        else
+        {
+            print("Execution failed.\n");
+        }
+    }
+    else
+    {
+        print("\eFF0000Failed to create the process.\n");
+        exit(EXIT_FAILURE);
+    }
+
     return 0;
 }
