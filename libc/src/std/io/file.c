@@ -32,7 +32,6 @@ int fseek(FILE *stream, long offset, int whence)
         stream->offset = offset;
         break;
     case SEEK_CUR:
-        stream->offset += offset;
         break;
     case SEEK_END:
         // stream->offset = syscall1(_FileLength, (uint64_t)File->KernelPrivate) + offset;

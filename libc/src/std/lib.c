@@ -6,19 +6,23 @@
 
 void abort(void)
 {
+    __asm__ __volatile__("syscall"
+                         :
+                         : "a"(0), "D"(-0xAB057)
+                         : "rcx", "r11", "memory");
+
     while (1)
         ;
 }
 
 int atexit(void (*function)(void))
 {
-    return 0;
+    return 1;
 }
 
 void exit(int status)
 {
-    while (1)
-        ;
+    _exit(status);
 }
 
 int atoi(const char *nptr)
@@ -64,7 +68,7 @@ void free(void *Address)
 
 int system(const char *command)
 {
-    return 0;
+    return -1;
 }
 
 double atof(const char *nptr)

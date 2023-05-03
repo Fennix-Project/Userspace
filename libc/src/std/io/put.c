@@ -28,3 +28,8 @@ int puts(const char *s)
     for (int i = 0; s[i] != '\0'; i++)
         fputc(s[i], stdout);
 }
+
+void perror(const char *__s)
+{
+    fputs(__s, stderr);
+}

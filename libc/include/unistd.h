@@ -8,9 +8,16 @@ extern "C"
 {
 #endif
 
-    int execv(const char *, char *const[]);
-    int execve(const char *, char *const[], char *const[]);
-    int execvp(const char *, char *const[]);
+    extern char **environ;
+
+    int execl(const char *pathname, const char *arg, ...);
+    int execlp(const char *file, const char *arg, ...);
+    int execle(const char *pathname, const char *arg, ...);
+    int execv(const char *pathname, char *const argv[]);
+    int execvp(const char *file, char *const argv[]);
+    int execvpe(const char *file, char *const argv[], char *const envp[]);
+    int execve(const char *pathname, char *const argv[], char *const envp[]);
+
     pid_t fork(void);
 
 #ifdef __cplusplus

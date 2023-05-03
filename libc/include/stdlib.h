@@ -8,6 +8,9 @@ extern "C"
 {
 #endif
 
+#define EXIT_FAILURE 1
+#define EXIT_SUCCESS 0
+
     void abort(void);
     int atexit(void (*function)(void));
     void exit(int status);
@@ -21,6 +24,8 @@ extern "C"
     int system(const char *command);
 
     double atof(const char *nptr);
+
+    extern void perror(const char *__s);
 
 #ifdef __cplusplus
 }
