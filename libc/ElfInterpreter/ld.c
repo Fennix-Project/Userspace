@@ -141,6 +141,16 @@ void PrintNL__(char *String)
 #define Print(x) Print__(x)
 #define PrintNL(x) PrintNL__(x)
 
+#if (0)
+#define PrintDbg(x) Print__(x)
+#define PrintDbgNL(x) PrintNL__(x)
+#define ltoaDbg(x, y, z) ltoa(x, y, z)
+#else
+#define PrintDbg(x)
+#define PrintDbgNL(x)
+#define ltoaDbg(x, y, z)
+#endif
+
 void *memcpy(void *dest, const void *src, size_t n)
 {
     uint8_t *d = dest;
@@ -249,16 +259,16 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
     if (Info)
     {
         struct LibAddressCollection *CurLib = Info;
-        // PrintNL("_______");
+        PrintDbgNL("_______");
         // The last entry is the null entry (Valid == false) which determines the end of the list.
         while (CurLib->Valid)
         {
-            // Print("-- ");
-            // Print(CurLib->Name);
-            // Print(" ");
-            // ltoa(RelIndex, DbgBuff, 10);
-            // Print(DbgBuff);
-            // PrintNL(" --");
+            PrintDbg("-- ");
+            PrintDbg(CurLib->Name);
+            PrintDbg(" ");
+            ltoaDbg(RelIndex, DbgBuff, 10);
+            PrintDbg(DbgBuff);
+            PrintDbgNL(" --");
             uintptr_t lib_BaseAddress = __UINTPTR_MAX__;
             uintptr_t app_BaseAddress = __UINTPTR_MAX__;
 
@@ -338,10 +348,10 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             {
             case R_X86_64_NONE:
             {
-                // PrintNL("R_X86_64_NONE");
+                PrintDbgNL("R_X86_64_NONE");
                 if (*GOTEntry == 0)
                 {
-                    // PrintNL("GOTEntry is 0");
+                    PrintDbgNL("GOTEntry is 0");
                     break;
                 }
                 Lock = 0;
@@ -349,34 +359,34 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             }
             case R_X86_64_JUMP_SLOT:
             {
-                // PrintNL("R_X86_64_JUMP_SLOT");
+                PrintDbgNL("R_X86_64_JUMP_SLOT");
                 int SymIndex = ELF64_R_SYM(Rel->r_info);
                 Elf64_Sym *Sym = _app_SymTab + SymIndex;
 
                 if (Sym->st_name)
                 {
                     char *SymName = app_DynStr + Sym->st_name;
-                    // Print("SymName: ");
-                    // PrintNL(SymName);
+                    PrintDbg("SymName: ");
+                    PrintDbgNL(SymName);
 
                     Elf64_Sym *LibSym = ELFLookupSymbol((Elf64_Ehdr *)CurLib->ElfFile, SymName);
 
-                    // Print("LibSym: 0x");
-                    // ltoa((long)LibSym, DbgBuff, 16);
-                    // PrintNL(DbgBuff);
+                    PrintDbg("LibSym: 0x");
+                    ltoaDbg((long)LibSym, DbgBuff, 16);
+                    PrintDbgNL(DbgBuff);
 
                     if (LibSym)
                     {
                         *GOTEntry = (Elf64_Addr)(CurLib->MemoryImage + LibSym->st_value);
 
-                        // ltoa(*GOTEntry, DbgBuff, 16);
-                        // Print("*GOTEntry: 0x");
-                        // PrintNL(DbgBuff);
+                        ltoa(*GOTEntry, DbgBuff, 16);
+                        PrintDbg("*GOTEntry: 0x");
+                        PrintDbgNL(DbgBuff);
 
                         Lock = 0;
                         return (void (*)()) * GOTEntry;
                     }
-                    // PrintNL("Not found in lib");
+                    PrintDbgNL("Not found in lib");
                 }
                 break;
             }
@@ -390,7 +400,7 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibAddressCollection *Info, long RelIndex))(
             }
 
         RetryNextLib:
-            // PrintNL("Retrying next lib");
+            PrintDbgNL("Retrying next lib");
             CurLib = CurLib->Next;
         }
     }

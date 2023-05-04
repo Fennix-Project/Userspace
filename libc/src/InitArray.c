@@ -9,8 +9,6 @@ typedef void (*fct)(void);
 extern fct __init_array_start[0], __init_array_end[0];
 extern fct __fini_array_start[0], __fini_array_end[0];
 
-// TODO: This is not working properly
-
 void __libc_init_array(void)
 {
     for (fct *func = __init_array_start; func != __init_array_end; func++)

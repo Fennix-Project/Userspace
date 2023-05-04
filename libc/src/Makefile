@@ -33,6 +33,7 @@ build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
 	$(info Linking $@)
+#	$(CC) -nostdlib -shared -fPIC -fPIE -Wl,-soname,libc.so $(OBJ) -o $(OUTPUT_DIR)$@
 	$(AR) rcs $(OUTPUT_DIR)$@ $(OBJ)
 
 %.o: %.c
