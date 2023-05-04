@@ -1,6 +1,8 @@
 #include <errno.h>
 
+int __local_stub_errno = 0;
+
 int *__errno_location(void)
 {
-    return 0;
+    return &__local_stub_errno;
 }

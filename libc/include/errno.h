@@ -131,7 +131,7 @@
 #define EOWNERDEAD 130      /* Owner died */
 #define ENOTRECOVERABLE 131 /* State not recoverable */
 
-extern int *__errno_location(void) __attribute__((const));
+extern int *__errno_location(void) __attribute__((const)) __attribute__ ((__nothrow__));
 #define errno (*__errno_location())
 
 #endif
