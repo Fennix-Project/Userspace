@@ -9,8 +9,12 @@ FILE *stderr;
 
 FILE *fopen(const char *filename, const char *mode)
 {
+    void *KPrivate = (void *)syscall2(_FileOpen, (uint64_t)filename, (uint64_t)mode);
+    if (IsSyscallError(KPrivate))
+        return NULL;
+
     FILE *FilePtr = malloc(sizeof(FILE));
-    FilePtr->KernelPrivate = (void *)syscall2(_FileOpen, (uint64_t)filename, (uint64_t)mode);
+    FilePtr->KernelPrivate = KPrivate;
     return FilePtr;
 }
 
@@ -22,6 +26,13 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
     return syscall4(_FileWrite, (uint64_t)stream->KernelPrivate, stream->offset, (uint64_t)ptr, size * nmemb);
+}
+
+int fclose(FILE *fp)
+{
+    void *KP = fp->KernelPrivate;
+    free(fp);
+    return syscall1(_FileClose, (uint64_t)KP);
 }
 
 int fseek(FILE *stream, long offset, int whence)
@@ -45,13 +56,6 @@ int fseek(FILE *stream, long offset, int whence)
 long ftell(FILE *stream)
 {
     return stream->offset;
-}
-
-int fclose(FILE *fp)
-{
-    void *KP = fp->KernelPrivate;
-    free(fp);
-    return syscall1(_FileClose, (uint64_t)KP);
 }
 
 int fflush(FILE *stream)
