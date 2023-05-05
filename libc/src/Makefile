@@ -29,6 +29,11 @@ endif
 
 CFLAGS := -fPIC -I$(INCLUDE) -I$(INCLUDE2)
 
+ifeq ($(DEBUG), 1)
+	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
+#	LDFLAGS += -ggdb3 -O0
+endif
+
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)

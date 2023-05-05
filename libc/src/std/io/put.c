@@ -4,12 +4,12 @@
 
 int fputc(int c, FILE *stream)
 {
-    syscall1(_Print, c);
+    return syscall1(_Print, c);
 }
 
 int putc(int c, FILE *stream)
 {
-    syscall1(_Print, c);
+    return syscall1(_Print, c);
 }
 
 int fputs(const char *s, FILE *stream)
@@ -18,18 +18,18 @@ int fputs(const char *s, FILE *stream)
         fputc(s[i], stream);
 }
 
-int putchar(int c)
-{
-    syscall1(_Print, c);
-}
-
 int puts(const char *s)
 {
     for (int i = 0; s[i] != '\0'; i++)
         fputc(s[i], stdout);
 }
 
-void perror(const char *__s)
+int putchar(int c)
 {
-    fputs(__s, stderr);
+    return putc(c, stdout);
+}
+
+void perror(const char *s)
+{
+    fputs(s, stderr);
 }

@@ -26,6 +26,9 @@ extern "C"
     extern FILE *stdin;
     extern FILE *stdout;
     extern FILE *stderr;
+    #define stdin stdin
+    #define stdout stdout
+    #define stderr stderr
 
     FILE *fopen(const char *filename, const char *mode);
     size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
@@ -44,8 +47,8 @@ extern "C"
     int fputc(int c, FILE *stream);
     int putc(int c, FILE *stream);
     int fputs(const char *s, FILE *stream);
-    int putchar(int c);
     int puts(const char *s);
+    int putchar(int c);
 
 #ifdef __cplusplus
 }

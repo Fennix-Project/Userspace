@@ -25,7 +25,7 @@ extern "C"
 
     double atof(const char *nptr);
 
-    extern void perror(const char *__s);
+    extern void perror(const char *s);
 
 #ifdef __cplusplus
 }

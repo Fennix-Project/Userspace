@@ -59,11 +59,6 @@ int fprintf(FILE *stream, const char *format, ...)
     return 0; // sprintf(char *s, const char *format, ...)
 }
 
-// int printf(const char *format, ...)
-// {
-//     return 0;
-// }
-
 void setbuf(FILE *stream, char *buf)
 {
 }
