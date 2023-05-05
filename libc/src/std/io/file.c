@@ -35,22 +35,13 @@ int fclose(FILE *fp)
     return syscall1(_FileClose, (uint64_t)KP);
 }
 
-int fseek(FILE *stream, long offset, int whence)
+off_t fseek(FILE *stream, long offset, int whence)
 {
-    switch (whence)
-    {
-    case SEEK_SET:
-        stream->offset = offset;
-        break;
-    case SEEK_CUR:
-        break;
-    case SEEK_END:
-        // stream->offset = syscall1(_FileLength, (uint64_t)File->KernelPrivate) + offset;
-        break;
-    default:
+    off_t new_offset = syscall3(_FileSeek, stream->KernelPrivate, offset, whence);
+    if (IsSyscallError(new_offset))
         return -1;
-    }
-    return stream->offset;
+    stream->offset = new_offset;
+    return new_offset;
 }
 
 long ftell(FILE *stream)

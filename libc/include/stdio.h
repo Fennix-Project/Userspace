@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <sys/stat.h>
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
@@ -29,7 +30,7 @@ extern "C"
     FILE *fopen(const char *filename, const char *mode);
     size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
     size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
-    int fseek(FILE *stream, long offset, int whence);
+    off_t fseek(FILE *stream, long offset, int whence);
     long ftell(FILE *stream);
     int fclose(FILE *fp);
     int fflush(FILE *stream);

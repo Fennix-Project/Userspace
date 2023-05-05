@@ -4,7 +4,7 @@
 typedef unsigned int _dev_t;
 typedef unsigned short _ino_t;
 typedef unsigned short _mode_t;
-typedef int _off_t;
+typedef long _off_t;
 
 #define dev_t _dev_t
 #define ino_t _ino_t
