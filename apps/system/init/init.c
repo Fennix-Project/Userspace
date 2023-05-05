@@ -65,10 +65,12 @@ int main(int argc, char *argv[], char *envp[])
         if (WIFEXITED(status))
         {
             print("Child process exited with code: %d\n", WEXITSTATUS(status));
+            return WEXITSTATUS(status);
         }
         else
         {
             print("Execution failed.\n");
+            exit(EXIT_FAILURE);
         }
     }
     else
