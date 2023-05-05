@@ -48,6 +48,11 @@ else ifeq ($(OSARCH), aarch64)
 CFLAGS += -pipe
 endif
 
+ifeq ($(DEBUG), 1)
+	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
+	LDFLAGS += -ggdb3 -O0
+endif
+
 build: $(FILENAME)
 	$(OBJDUMP) -d $(FILENAME) > file_dump.map
 	mv $(FILENAME) ../../../out/system/$(FILENAME)
