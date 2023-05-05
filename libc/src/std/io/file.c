@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/syscalls.h>
+#include <errno.h>
 
-FILE *stdin;
-FILE *stdout;
-FILE *stderr;
+FILE *stdin = NULL;
+FILE *stdout = NULL;
+FILE *stderr = NULL;
 
 FILE *fopen(const char *filename, const char *mode)
 {
@@ -20,16 +21,34 @@ FILE *fopen(const char *filename, const char *mode)
 
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
+    if (ptr == NULL || stream == NULL || size == 0 || nmemb == 0)
+    {
+        errno = EINVAL;
+        return 0;
+    }
+
     return syscall4(_FileRead, (uint64_t)stream->KernelPrivate, stream->offset, (uint64_t)ptr, size * nmemb);
 }
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
+    if (ptr == NULL || stream == NULL || size == 0 || nmemb == 0)
+    {
+        errno = EINVAL;
+        return 0;
+    }
+
     return syscall4(_FileWrite, (uint64_t)stream->KernelPrivate, stream->offset, (uint64_t)ptr, size * nmemb);
 }
 
 int fclose(FILE *fp)
 {
+    if (fp == NULL)
+    {
+        errno = EINVAL;
+        return EOF;
+    }
+
     void *KP = fp->KernelPrivate;
     free(fp);
     return syscall1(_FileClose, (uint64_t)KP);
@@ -37,6 +56,12 @@ int fclose(FILE *fp)
 
 off_t fseek(FILE *stream, long offset, int whence)
 {
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
     off_t new_offset = syscall3(_FileSeek, stream->KernelPrivate, offset, whence);
     if (IsSyscallError(new_offset))
         return -1;

@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "../mem/liballoc_1_1.h"
+#include "../../mem/liballoc_1_1.h"
 
 size_t strlen(const char *str)
 {
@@ -122,21 +122,4 @@ char *strrchr(char const *s, int c)
         return NULL;
 
     return (char *)s + pos;
-}
-
-void *memmove(void *dest, const void *src, size_t n)
-{
-    char *d = dest;
-    const char *s = src;
-    if (d < s)
-        while (n--)
-            *d++ = *s++;
-    else
-    {
-        const char *lasts = s + (n - 1);
-        char *lastd = d + (n - 1);
-        while (n--)
-            *lastd-- = *lasts--;
-    }
-    return dest;
 }

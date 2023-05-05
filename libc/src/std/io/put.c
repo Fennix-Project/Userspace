@@ -4,12 +4,12 @@
 
 int fputc(int c, FILE *stream)
 {
-    return syscall1(_Print, c);
+    return syscall2(_Print, c, 0);
 }
 
 int putc(int c, FILE *stream)
 {
-    return syscall1(_Print, c);
+    return syscall2(_Print, c, 0);
 }
 
 int fputs(const char *s, FILE *stream)

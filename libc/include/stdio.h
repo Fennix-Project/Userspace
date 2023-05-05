@@ -9,6 +9,13 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
+/**
+ * @brief EOF - End of file
+ *
+ * The value returned by several functions to indicate the end of file.
+ */
+#define EOF (-1)
+
 struct _IO_FILE
 {
     size_t offset;
@@ -26,9 +33,9 @@ extern "C"
     extern FILE *stdin;
     extern FILE *stdout;
     extern FILE *stderr;
-    #define stdin stdin
-    #define stdout stdout
-    #define stderr stderr
+#define stdin stdin
+#define stdout stdout
+#define stderr stderr
 
     FILE *fopen(const char *filename, const char *mode);
     size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
