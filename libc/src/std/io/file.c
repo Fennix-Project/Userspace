@@ -27,7 +27,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
         return 0;
     }
 
-    return syscall4(_FileRead, (uint64_t)stream->KernelPrivate, stream->offset, (uint64_t)ptr, size * nmemb);
+    return syscall4(_FileRead, (uint64_t)stream->KernelPrivate, stream->_offset, (uint64_t)ptr, size * nmemb);
 }
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
@@ -38,7 +38,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
         return 0;
     }
 
-    return syscall4(_FileWrite, (uint64_t)stream->KernelPrivate, stream->offset, (uint64_t)ptr, size * nmemb);
+    return syscall4(_FileWrite, (uint64_t)stream->KernelPrivate, stream->_offset, (uint64_t)ptr, size * nmemb);
 }
 
 int fclose(FILE *fp)
@@ -56,7 +56,7 @@ int fclose(FILE *fp)
 
 off_t fseek(FILE *stream, long offset, int whence)
 {
-    if (stream == NULL)
+    if (stream == NULL || whence < 0 || whence > 2)
     {
         errno = EINVAL;
         return -1;
@@ -65,23 +65,40 @@ off_t fseek(FILE *stream, long offset, int whence)
     off_t new_offset = syscall3(_FileSeek, stream->KernelPrivate, offset, whence);
     if (IsSyscallError(new_offset))
         return -1;
-    stream->offset = new_offset;
+    stream->_offset = new_offset;
     return new_offset;
 }
 
 long ftell(FILE *stream)
 {
-    return stream->offset;
+    return stream->_offset;
 }
 
 int fflush(FILE *stream)
 {
-    return 0;
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return EOF;
+    }
+
+    errno = ENOSYS;
+    return EOF;
 }
 
 int fprintf(FILE *stream, const char *format, ...)
 {
-    return 0; // sprintf(char *s, const char *format, ...)
+    if (stream == NULL || format == NULL)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    va_list args;
+    va_start(args, format);
+    const int ret = vfprintf(stream, format, args);
+    va_end(args);
+    return ret;
 }
 
 void setbuf(FILE *stream, char *buf)

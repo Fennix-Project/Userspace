@@ -4,13 +4,17 @@
 
 int fputc(int c, FILE *stream)
 {
+    // FIXME
+    // if (stream == NULL)
+    // {
+    //     errno = EBADF;
+    //     return EOF;
+    // }
+
     return syscall2(_Print, c, 0);
 }
 
-int putc(int c, FILE *stream)
-{
-    return syscall2(_Print, c, 0);
-}
+int putc(int c, FILE *stream) { return fputc(c, stream); }
 
 int fputs(const char *s, FILE *stream)
 {
@@ -24,12 +28,5 @@ int puts(const char *s)
         fputc(s[i], stdout);
 }
 
-int putchar(int c)
-{
-    return putc(c, stdout);
-}
-
-void perror(const char *s)
-{
-    fputs(s, stderr);
-}
+int putchar(int c) { return fputc(c, stdout); }
+void perror(const char *s) { fputs(s, stderr); }

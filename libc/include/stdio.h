@@ -16,9 +16,31 @@
  */
 #define EOF (-1)
 
+struct _IO_marker
+{
+    struct _IO_marker *_next;
+    struct _IO_FILE *_sbuf;
+    int _pos;
+};
+
 struct _IO_FILE
 {
-    size_t offset;
+    int _flags;
+
+    char *_IO_read_ptr;
+    char *_IO_read_end;
+    char *_IO_read_base;
+    char *_IO_write_base;
+    char *_IO_write_ptr;
+    char *_IO_write_end;
+    char *_IO_buf_base;
+    char *_IO_buf_end;
+
+    __off_t _offset;
+
+    struct _IO_marker *_markers;
+    struct _IO_FILE *_chain;
+    int _fileno;
 
     void *KernelPrivate;
 };
