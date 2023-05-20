@@ -6,7 +6,7 @@ NAME=ld
 OBJECT_NAME=$(NAME).so
 SO_NAME=$(OBJECT_NAME)
 
-OUTPUT_DIR=../../out/
+OUTPUT_DIR=../../out/lib/
 SYSROOT = --sysroot=../../out/
 
 CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
