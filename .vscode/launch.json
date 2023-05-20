@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "/system/init.elf",
+            "name": "/init",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/out/system/init.elf",
+            "program": "${workspaceRoot}/out/init",
             "cwd": "${workspaceRoot}",
             "args": [],
             "targetArchitecture": "x64",
@@ -31,16 +31,16 @@
                     "description": "Make breakpoint pending on future shared library load."
                 },
                 {
-                    "text": "file ${workspaceRoot}/out/system/init.elf",
+                    "text": "file ${workspaceRoot}/out/init",
                     "description": "Load binary."
                 },
             ]
         },
         {
-            "name": "/system/bin/doom.elf",
+            "name": "/bin/doom",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/out/system/bin/doom.elf",
+            "program": "${workspaceRoot}/out/bin/doom",
             "cwd": "${workspaceRoot}",
             "args": [],
             "targetArchitecture": "x64",
@@ -66,7 +66,7 @@
                     "description": "Make breakpoint pending on future shared library load."
                 },
                 {
-                    "text": "file ${workspaceRoot}/out/system/bin/doom.elf",
+                    "text": "file ${workspaceRoot}/out/bin/doom",
                     "description": "Load binary."
                 },
             ]

@@ -214,7 +214,7 @@ bool ELFDynamicReallocation(void *ElfFile, void *MemoryImage)
                         {
                             debug("Library \"%s\" not found, retrying... (%#x)", LibPath, LibNode->Status);
                             memset(LibPath, 0, 256);
-                            strcpy(LibPath, "/system/lib/");
+                            strcpy(LibPath, "/lib/");
                             strcat(LibPath, Library);
                             AlreadyTried = true;
                             goto LibPathRetry;

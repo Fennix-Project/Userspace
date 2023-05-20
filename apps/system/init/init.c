@@ -55,7 +55,7 @@ int main(int argc, char *argv[], char *envp[])
     if (pid == 0) // Child process
     {
         print("Creating shell process\n");
-        char *args[] = {"/system/bin/sh", "--rcfile /home/default/.shrc", NULL};
+        char *args[] = {"/bin/sh", NULL};
         execv(args[0], args);
         exit(EXIT_FAILURE);
     }

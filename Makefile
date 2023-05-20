@@ -6,10 +6,9 @@ ifeq ($(NEWLIB),1)
 	make -C mlibc build
 else
 	mkdir -p out
-	mkdir -p out/system
-	mkdir -p out/system/lib
-	mkdir -p out/system/bin
-	mkdir -p out/system/include
+	mkdir -p out/lib
+	mkdir -p out/bin
+	mkdir -p out/usr/include
 	make -C libc build
 	make -C libs build
 	make -C apps build

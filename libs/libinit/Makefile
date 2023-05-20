@@ -6,8 +6,8 @@ NAME=init
 OBJECT_NAME=lib$(NAME).so
 SO_NAME=$(OBJECT_NAME)
 
-OUTPUT_DIR=../../out/system/lib/
-SYSROOT = --sysroot=../../out/system/
+OUTPUT_DIR=../../out/lib/
+SYSROOT = --sysroot=../../out/
 
 CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
 AS = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as

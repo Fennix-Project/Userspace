@@ -22,8 +22,8 @@ CRTI_PATH = $(shell $(CC) -print-file-name=crti.o)
 CRTN_PATH = $(shell $(CC) -print-file-name=crtn.o)
 
 build: $(OBJ)
-	mv $^ ../../out/system/lib/
-	cp $(CRTBEGIN_PATH) $(CRTEND_PATH) $(CRTI_PATH) $(CRTN_PATH) ../../out/system/lib/
+	mv $^ ../../out/lib/
+	cp $(CRTBEGIN_PATH) $(CRTEND_PATH) $(CRTI_PATH) $(CRTN_PATH) ../../out/lib/
 
 %.o: %.c
 	$(info Compiling $<)

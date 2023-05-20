@@ -1,6 +1,5 @@
 *.o
 *.map
 *.fex
-*.elf
 out/
 .dccache

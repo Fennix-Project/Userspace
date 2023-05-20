@@ -5,7 +5,7 @@ NAME=gcc
 
 OBJECT_NAME=lib$(NAME).a
 
-OUTPUT_DIR=../../out/system/lib/
+OUTPUT_DIR=../../out/lib/
 
 CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
 

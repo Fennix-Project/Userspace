@@ -1,6 +1,6 @@
 build:
-	cp -r include/* ../out/system/include
-	cp ../../Kernel/syscalls.h ../out/system/include/sys
+	cp -r include/* ../out/usr/include
+	cp ../../Kernel/syscalls.h ../out/usr/include/sys
 	make -C runtime build
 	make -C src build
 	make -C ElfInterpreter build

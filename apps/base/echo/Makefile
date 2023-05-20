@@ -1,15 +1,13 @@
+WORKSPACE := ../../../
+
 # Config file
-include ../../../../Makefile.conf
+include ../$(WORKSPACE)Makefile.conf
 
-FILENAME = echo.elf
-
-SYSROOT = --sysroot=../../../out/system/
-
-CC = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
-CPP = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)g++
-LD = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ld
-AS = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
-OBJDUMP = ../../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)objdump
+CC = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
+CPP = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)g++
+LD = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ld
+AS = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
+OBJDUMP = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)objdump
 
 GIT_COMMIT = $(shell git rev-parse HEAD)
 GIT_COMMIT_SHORT = $(shell git rev-parse --short HEAD)
@@ -27,36 +25,26 @@ S_SOURCES = $(shell find ./ -type f -name '*.S' -not -path "./arch/amd64/*" -not
 C_SOURCES = $(shell find ./ -type f -name '*.c' -not -path "./arch/amd64/*" -not -path "./arch/i386/*")
 CPP_SOURCES = $(shell find ./ -type f -name '*.cpp' -not -path "./arch/amd64/*" -not -path "./arch/i386/*")
 endif
-HEADERS = $(sort $(dir $(wildcard ../../../out/system/include/*)))
 OBJ = $(C_SOURCES:.c=.o) $(CPP_SOURCES:.cpp=.o) $(ASM_SOURCES:.asm=.o) $(S_SOURCES:.S=.o) $(PSF_SOURCES:.psf=.o) $(BMP_SOURCES:.bmp=.o)
-INCLUDE_DIR = ../../../out/system/include
 
-LDFLAGS := -Wl,-Map file.map
+SYSROOT = --sysroot=$(WORKSPACE)out/
+FILENAME = echo
 
-WARNCFLAG = -Wall -Wextra -Wno-builtin-declaration-mismatch
+HEADERS = $(sort $(dir $(wildcard $(WORKSPACE)out/usr/include/*)))
 
-CFLAGS :=										\
-	-I$(INCLUDE_DIR)							\
+LDFLAGS =
+CFLAGS = -I$(WORKSPACE)out/usr/include			\
 	-DGIT_COMMIT='"$(GIT_COMMIT)"'				\
 	-DGIT_COMMIT_SHORT='"$(GIT_COMMIT_SHORT)"'
+WARNCFLAG = -Wall -Wextra
 
-ifeq ($(OSARCH), amd64)
-
-CFLAGS += -march=x86-64
-
-else ifeq ($(OSARCH), i386)
-
-CFLAGS += -march=i386
-
-else ifeq ($(OSARCH), aarch64)
-
-CFLAGS += -pipe
-
+ifeq ($(DEBUG), 1)
+	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
+	LDFLAGS += -ggdb3 -O0
 endif
 
 build: $(FILENAME)
-	$(OBJDUMP) -d $(FILENAME) > file_dump.map
-	mv $(FILENAME) ../../../out/system/bin/$(FILENAME)
+	mv $(FILENAME) $(WORKSPACE)out/bin/$(FILENAME)
 
 $(FILENAME): $(OBJ)
 	$(info Linking $@)
@@ -72,13 +60,7 @@ $(FILENAME): $(OBJ)
 
 %.o: %.S
 	$(info Compiling $<)
-ifeq ($(OSARCH), amd64)
 	$(AS) -o $@ $<
-else ifeq ($(OSARCH), i386)
-	$(AS) -o $@ $<
-else ifeq ($(OSARCH), aarch64)
-	$(AS) -o $@ $<
-endif
 
 clean:
-	rm -f *.o file.map file_dump.map $(OBJ)
+	rm -f $(OBJ)

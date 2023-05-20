@@ -1,15 +1,17 @@
+WORKSPACE := ../../
+
 # Config file
-include ../../../Makefile.conf
+include ../$(WORKSPACE)Makefile.conf
 
 NAME=c
 
 OBJECT_NAME=lib$(NAME).a
 
-OUTPUT_DIR=../../out/system/lib/
+OUTPUT_DIR=$(WORKSPACE)out/lib/
 
-CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
-AS = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
-AR = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
+CC = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
+AS = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
+AR = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
@@ -19,7 +21,7 @@ ASM_SOURCES = $(shell find ./ -type f -name '*.asm')
 OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.S=.o}
 
 INCLUDE = ../include
-INCLUDE2 = ../../out/system/include
+INCLUDE2 = $(WORKSPACE)out/usr/include
 
 ifeq ($(OSARCH), amd64)
 ASM_ARCH := elf64
@@ -58,4 +60,4 @@ $(OBJECT_NAME): $(OBJ)
 	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 clean:
-	rm -f $(OBJ) file_dump.map
+	rm -f $(OBJ)
