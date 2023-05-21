@@ -5,15 +5,15 @@
             "name": "/init",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/out/init",
-            "cwd": "${workspaceRoot}",
+            "program": "${workspaceFolder}/out/bin/init",
+            "cwd": "${workspaceFolder}",
             "args": [],
             "targetArchitecture": "x64",
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
             "miDebuggerArgs": "",
             "externalConsole": false,
-            "additionalSOLibSearchPath": "${workspaceRoot}",
+            "additionalSOLibSearchPath": "${workspaceFolder}",
             "customLaunchSetupCommands": [
                 {
                     "text": "target remote localhost:1234",
@@ -31,8 +31,12 @@
                     "description": "Make breakpoint pending on future shared library load."
                 },
                 {
-                    "text": "file ${workspaceRoot}/out/init",
+                    "text": "file ${workspaceFolder}/out/bin/init",
                     "description": "Load binary."
+                },
+                {
+                    "text": "add-symbol-file ${workspaceFolder}/../Kernel/kernel.fsys",
+                    "description": "Load kernel binary."
                 },
             ]
         },
@@ -40,15 +44,15 @@
             "name": "/bin/doom",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/out/bin/doom",
-            "cwd": "${workspaceRoot}",
+            "program": "${workspaceFolder}/out/usr/bin/doom",
+            "cwd": "${workspaceFolder}",
             "args": [],
             "targetArchitecture": "x64",
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
             "miDebuggerArgs": "",
             "externalConsole": false,
-            "additionalSOLibSearchPath": "${workspaceRoot}",
+            "additionalSOLibSearchPath": "${workspaceFolder}",
             "customLaunchSetupCommands": [
                 {
                     "text": "target remote localhost:1234",
@@ -66,8 +70,12 @@
                     "description": "Make breakpoint pending on future shared library load."
                 },
                 {
-                    "text": "file ${workspaceRoot}/out/bin/doom",
+                    "text": "file ${workspaceFolder}/out/usr/bin/doom",
                     "description": "Load binary."
+                },
+                {
+                    "text": "add-symbol-file ${workspaceFolder}/../Kernel/kernel.fsys",
+                    "description": "Load kernel binary."
                 },
             ]
         }
