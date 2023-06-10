@@ -73,7 +73,7 @@ extern "C"
 // e.g. make them static so as not to clash with other objects also
 // using them.
 #ifndef PRINTF_VISIBILITY
-#define PRINTF_VISIBILITY
+#define PRINTF_VISIBILITY __attribute__((visibility("default")))
 #endif
 
     /**

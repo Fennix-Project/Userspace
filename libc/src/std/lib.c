@@ -2,88 +2,86 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <sys/syscalls.h>
+
 #include "../mem/liballoc_1_1.h"
 
-void abort(void)
+PUBLIC void abort(void)
 {
-    __asm__ __volatile__("syscall"
-                         :
-                         : "a"(0), "D"(-0xAB057)
-                         : "rcx", "r11", "memory");
-
-    while (1)
-        ;
+	syscall1(_Exit, -0xAB057);
+	while (1)
+		;
 }
 
-int atexit(void (*function)(void))
+PUBLIC int atexit(void (*function)(void))
 {
-    return 1;
+	return 1;
 }
 
-void exit(int status)
+PUBLIC void exit(int status)
 {
-    _exit(status);
+	_exit(status);
 }
 
-int atoi(const char *nptr)
+PUBLIC int atoi(const char *nptr)
 {
-    uint64_t Length = strlen((char *)nptr);
-    if (nptr)
-        while (nptr[Length] != '\0')
-            ++Length;
-    uint64_t OutBuffer = 0;
-    uint64_t Power = 1;
-    for (uint64_t i = Length; i > 0; --i)
-    {
-        OutBuffer += (nptr[i - 1] - 48) * Power;
-        Power *= 10;
-    }
-    return OutBuffer;
+	uint64_t Length = strlen((char *)nptr);
+	if (nptr)
+		while (nptr[Length] != '\0')
+			++Length;
+	uint64_t OutBuffer = 0;
+	uint64_t Power = 1;
+	for (uint64_t i = Length; i > 0; --i)
+	{
+		OutBuffer += (nptr[i - 1] - 48) * Power;
+		Power *= 10;
+	}
+	return OutBuffer;
 }
 
-char **environ = NULL;
+PUBLIC char **environ = NULL;
 
-char *getenv(const char *name)
+PUBLIC char *getenv(const char *name)
 {
-    char **env = environ;
-    if (env == NULL)
-        return NULL;
-    size_t len = strlen(name);
-    while (*env != NULL)
-    {
-        if ((strncmp(*env, name, len) == 0) && ((*env)[len] == '='))
-            return &(*env)[len + 1];
-        ++env;
-    }
+	char **env = environ;
+	if (env == NULL)
+		return NULL;
+	size_t len = strlen(name);
+	while (*env != NULL)
+	{
+		if ((strncmp(*env, name, len) == 0) && ((*env)[len] == '='))
+			return &(*env)[len + 1];
+		++env;
+	}
 }
 
-void *malloc(size_t Size) { return PREFIX(malloc)(Size); }
-void *realloc(void *Address, size_t Size) { return PREFIX(realloc)(Address, Size); }
-void *calloc(size_t Count, size_t Size) { return PREFIX(calloc)(Count, Size); }
-void free(void *Address)
+PUBLIC void *malloc(size_t Size) { return PREFIX(malloc)(Size); }
+PUBLIC void *realloc(void *Address, size_t Size) { return PREFIX(realloc)(Address, Size); }
+PUBLIC void *calloc(size_t Count, size_t Size) { return PREFIX(calloc)(Count, Size); }
+PUBLIC void free(void *Address)
 {
-    PREFIX(free)
-    (Address);
+	PREFIX(free)
+	(Address);
 }
 
-int system(const char *command)
+PUBLIC int system(const char *command)
 {
-    return -1;
+	return -1;
 }
 
-double atof(const char *nptr)
+PUBLIC double atof(const char *nptr)
 {
-    // FIXME: This is a very bad implementation of atof.
-    uint64_t Length = strlen((char *)nptr);
-    if (nptr)
-        while (nptr[Length] != '\0')
-            ++Length;
-    double OutBuffer = 0;
-    double Power = 1;
-    for (uint64_t i = Length; i > 0; --i)
-    {
-        OutBuffer += (nptr[i - 1] - 48) * Power;
-        Power *= 10;
-    }
-    return OutBuffer;
+	// FIXME: This is a very bad implementation of atof.
+	uint64_t Length = strlen((char *)nptr);
+	if (nptr)
+		while (nptr[Length] != '\0')
+			++Length;
+	double OutBuffer = 0;
+	double Power = 1;
+	for (uint64_t i = Length; i > 0; --i)
+	{
+		OutBuffer += (nptr[i - 1] - 48) * Power;
+		Power *= 10;
+	}
+	return OutBuffer;
 }

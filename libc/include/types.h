@@ -7,10 +7,10 @@
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #define START_EXTERNC \
-    EXTERNC           \
-    {
+	EXTERNC           \
+	{
 #define END_EXTERNC \
-    }
+	}
 #else
 #define EXTERNC
 #define START_EXTERNC
@@ -194,5 +194,13 @@ typedef __SIZE_TYPE__ size_t;
 #define b32(x) __builtin_bswap32(x)
 #define b48(x) (((((x)&0x0000000000ff) << 40) | (((x)&0x00000000ff00) << 24) | (((x)&0x000000ff0000) << 8) | (((x)&0x0000ff000000) >> 8) | (((x)&0x00ff00000000) >> 24) | (((x)&0xff0000000000) >> 40)))
 #define b64(x) __builtin_bswap64(x)
+
+#ifndef PUBLIC
+#define PUBLIC __attribute__((visibility("default")))
+#endif // !PUBLIC
+
+#ifndef PRIVATE
+#define PRIVATE __attribute__((visibility("hidden")))
+#endif // !PRIVATE
 
 #endif // !__FENNIX_LIBC_TYPES_H__

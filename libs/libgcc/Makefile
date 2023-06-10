@@ -7,7 +7,7 @@ OBJECT_NAME=lib$(NAME).a
 
 OUTPUT_DIR=../../out/lib/
 
-CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
+CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
 
 CRTBEGIN_PATH = $(shell $(CC) -print-file-name=libgcc.a)
 

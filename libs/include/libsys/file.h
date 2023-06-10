@@ -5,21 +5,21 @@
 
 typedef struct
 {
-    void *KernelPrivate;
+	void *KernelPrivate;
 } File;
 
 enum FileFlags
 {
-    FILE_READ = 1,
-    FILE_WRITE = 2,
-    FILE_APPEND = 4,
-    FILE_CREATE = 8,
-    FILE_TRUNCATE = 16,
-    FILE_EXCLUSIVE = 32,
-    FILE_DIRECTORY = 64,
-    FILE_SYMLINK = 128,
-    FILE_NONBLOCK = 256,
-    FILE_CLOEXEC = 512,
+	FILE_READ = 1,
+	FILE_WRITE = 2,
+	FILE_APPEND = 4,
+	FILE_CREATE = 8,
+	FILE_TRUNCATE = 16,
+	FILE_EXCLUSIVE = 32,
+	FILE_DIRECTORY = 64,
+	FILE_SYMLINK = 128,
+	FILE_NONBLOCK = 256,
+	FILE_CLOEXEC = 512,
 };
 
 File *FileOpen(const char *Path, uint64_t Flags);

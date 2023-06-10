@@ -3,18 +3,23 @@ include ../../../Makefile.conf
 
 NAME=ssp
 
-OBJECT_NAME=lib$(NAME).a
+ifeq ($(USERSPACE_STATIC_LIBS), 1)
+OBJECT_NAME := lib$(NAME).a
+else
+OBJECT_NAME := lib$(NAME).so
+endif
 
 OUTPUT_DIR=../../out/lib/
+SYSROOT = --sysroot=../../out/
 
-CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
-AR = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
-OBJDUMP = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)objdump
-NASM = /usr/bin/nasm
+CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
+AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
+AR = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ar
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
-ASM_SOURCES = $(shell find ./ -type f -name '*.asm')
-OBJ = ${C_SOURCES:.c=.o} ${ASM_SOURCES:.asm=.o}
+CPP_SOURCES = $(shell find ./ -type f -name '*.cpp')
+S_SOURCES = $(shell find ./ -type f -name '*.S')
+OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${S_SOURCES:.S=.o}
 
 ifeq ($(OSARCH), amd64)
 ASM_ARCH := elf64
@@ -22,14 +27,21 @@ else ifeq ($(OSARCH), i386)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -I../include -I../../libc/include
+CFLAGS := -fvisibility=hidden -fPIC -I../include -I../../libc/include
+
+ifeq ($(DEBUG), 1)
+	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
+endif
 
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
 	$(info Linking $@)
+ifeq ($(USERSPACE_STATIC_LIBS), 1)
 	$(AR) rcs $(OUTPUT_DIR)$@ $(OBJ)
-	$(OBJDUMP) -d $(OUTPUT_DIR)$@ > file_dump.map
+else
+	$(CC) -nostdlib -shared -fPIC -fPIE -Wl,-soname,$(OBJECT_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
+endif
 
 %.o: %.c
 	$(info Compiling $<)
@@ -39,9 +51,9 @@ $(OBJECT_NAME): $(OBJ)
 	$(info Compiling $<)
 	$(CC) $(CFLAGS) -std=c++20 -c $< -o $@
 
-%.o: %.asm
+%.o: %.S
 	$(info Compiling $<)
-	$(NASM) $< -f $(ASM_ARCH) -o $@
+	$(AS) -c $< -o $@
 
 clean:
-	rm -f file_dump.map $(OBJ)
+	rm -f $(OBJ)

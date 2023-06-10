@@ -2,31 +2,33 @@
 #include <stdarg.h>
 #include <sys/syscalls.h>
 
-int fputc(int c, FILE *stream)
-{
-    // FIXME
-    // if (stream == NULL)
-    // {
-    //     errno = EBADF;
-    //     return EOF;
-    // }
+#include <sys/types.h> // For PUBLIC
 
-    return syscall2(_Print, c, 0);
+PUBLIC int fputc(int c, FILE *stream)
+{
+	// FIXME
+	// if (stream == NULL)
+	// {
+	//     errno = EBADF;
+	//     return EOF;
+	// }
+
+	return syscall2(_Print, c, 0);
 }
 
-int putc(int c, FILE *stream) { return fputc(c, stream); }
+PUBLIC int putc(int c, FILE *stream) { return fputc(c, stream); }
 
-int fputs(const char *s, FILE *stream)
+PUBLIC int fputs(const char *s, FILE *stream)
 {
-    for (int i = 0; s[i] != '\0'; i++)
-        fputc(s[i], stream);
+	for (int i = 0; s[i] != '\0'; i++)
+		fputc(s[i], stream);
 }
 
-int puts(const char *s)
+PUBLIC int puts(const char *s)
 {
-    for (int i = 0; s[i] != '\0'; i++)
-        fputc(s[i], stdout);
+	for (int i = 0; s[i] != '\0'; i++)
+		fputc(s[i], stdout);
 }
 
-int putchar(int c) { return fputc(c, stdout); }
-void perror(const char *s) { fputs(s, stderr); }
+PUBLIC int putchar(int c) { return fputc(c, stdout); }
+PUBLIC void perror(const char *s) { fputs(s, stderr); }

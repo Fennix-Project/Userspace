@@ -9,10 +9,10 @@ SO_NAME=$(OBJECT_NAME)
 OUTPUT_DIR=../../out/lib/
 SYSROOT = --sysroot=../../out/
 
-CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
-AS = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
-AR = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
-OBJDUMP = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)objdump
+CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
+AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
+AR = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ar
+OBJDUMP = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)objdump
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
@@ -23,16 +23,25 @@ OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURC
 
 INCLUDE = ../include
 
-ifeq ($(OSARCH), amd64)
-ASM_ARCH := elf64
-else ifeq ($(OSARCH), i386)
-ASM_ARCH := elf32
-endif
-
 SIMD_FLAGS := -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-sse4 -mno-avx -mno-avx2 -mno-avx512f
 
-CFLAGS := -pie -fPIE -I$(INCLUDE) $(SIMD_FLAGS)
-LDFLAGS := -nostartfiles -nostdlib -pie -fPIE -Wl,-e_ld_start,-soname,$(SO_NAME) $(SYSROOT)
+CFLAGS := -I$(INCLUDE) $(SIMD_FLAGS) -fPIC
+LDFLAGS := -nostartfiles -nostdlib -Wl,-soname,$(SO_NAME) $(SYSROOT) -fno-pie -fno-PIC
+
+ifeq ($(OSARCH), amd64)
+ASM_ARCH := elf64
+LDFLAGS += -Ttext=0xFFFFFFFFF0001000
+CFLAGS += -m64
+else ifeq ($(OSARCH), i386)
+ASM_ARCH := elf32
+LDFLAGS += -fixme
+CFLAGS += -m32
+endif
+
+ifeq ($(DEBUG), 1)
+	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
+	LDFLAGS += -ggdb3 -O0
+endif
 
 build: $(OBJECT_NAME)
 

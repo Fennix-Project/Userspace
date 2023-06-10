@@ -7,38 +7,38 @@
 /** @brief Please use this macro to create a new lock. */
 class LockClass
 {
-    struct SpinLockData
-    {
-        uint64_t LockData = 0x0;
-        const char *CurrentHolder = "(nul)";
-        const char *AttemptingToGet = "(nul)";
-        uint64_t Count = 0;
-    };
-    void DeadLock(SpinLockData Lock);
+	struct SpinLockData
+	{
+		uint64_t LockData = 0x0;
+		const char *CurrentHolder = "(nul)";
+		const char *AttemptingToGet = "(nul)";
+		uint64_t Count = 0;
+	};
+	void DeadLock(SpinLockData Lock);
 
 private:
-    SpinLockData LockData;
-    bool IsLocked = false;
+	SpinLockData LockData;
+	bool IsLocked = false;
 
 public:
-    SpinLockData *GetLockData() { return &LockData; }
-    int Lock(const char *FunctionName);
-    int Unlock();
+	SpinLockData *GetLockData() { return &LockData; }
+	int Lock(const char *FunctionName);
+	int Unlock();
 };
 
 /** @brief Please use this macro to create a new smart lock. */
 class SmartLockClass
 {
 private:
-    LockClass *LockPointer = nullptr;
+	LockClass *LockPointer = nullptr;
 
 public:
-    SmartLockClass(LockClass &Lock, const char *FunctionName)
-    {
-        this->LockPointer = &Lock;
-        this->LockPointer->Lock(FunctionName);
-    }
-    ~SmartLockClass() { this->LockPointer->Unlock(); }
+	SmartLockClass(LockClass &Lock, const char *FunctionName)
+	{
+		this->LockPointer = &Lock;
+		this->LockPointer->Lock(FunctionName);
+	}
+	~SmartLockClass() { this->LockPointer->Unlock(); }
 };
 
 /** @brief Create a new lock (can be used with SmartCriticalSection). */

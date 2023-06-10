@@ -1,27 +1,25 @@
-WORKSPACE := ../../
-
 # Config file
-include ../$(WORKSPACE)Makefile.conf
+include ../../../Makefile.conf
 
 NAME=c
 
-OBJECT_NAME=lib$(NAME).a
+ifeq ($(USERSPACE_STATIC_LIBS), 1)
+OBJECT_NAME := lib$(NAME).a
+else
+OBJECT_NAME := lib$(NAME).so
+endif
 
-OUTPUT_DIR=$(WORKSPACE)out/lib/
+OUTPUT_DIR=../../out/lib/
+SYSROOT = --sysroot=../../out/
 
-CC = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
-AS = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
-AR = ../$(WORKSPACE)$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)ar
-NASM = /usr/bin/nasm
+CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
+AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
+AR = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)ar
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')
 CPP_SOURCES = $(shell find ./ -type f -name '*.cpp')
 S_SOURCES = $(shell find ./ -type f -name '*.S')
-ASM_SOURCES = $(shell find ./ -type f -name '*.asm')
-OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${ASM_SOURCES:.asm=.o} ${S_SOURCES:.S=.o}
-
-INCLUDE = ../include
-INCLUDE2 = $(WORKSPACE)out/usr/include
+OBJ = ${C_SOURCES:.c=.o} ${CPP_SOURCES:.cpp=.o} ${S_SOURCES:.S=.o}
 
 ifeq ($(OSARCH), amd64)
 ASM_ARCH := elf64
@@ -29,19 +27,21 @@ else ifeq ($(OSARCH), i386)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fPIC -I$(INCLUDE) -I$(INCLUDE2)
+CFLAGS := -fvisibility=hidden -fPIC -I../include -I../../out/usr/include
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
-#	LDFLAGS += -ggdb3 -O0
 endif
 
 build: $(OBJECT_NAME)
 
 $(OBJECT_NAME): $(OBJ)
 	$(info Linking $@)
-#	$(CC) -nostdlib -shared -fPIC -fPIE -Wl,-soname,libc.so $(OBJ) -o $(OUTPUT_DIR)$@
+ifeq ($(USERSPACE_STATIC_LIBS), 1)
 	$(AR) rcs $(OUTPUT_DIR)$@ $(OBJ)
+else
+	$(CC) -nostdlib -shared -fPIC -fPIE -Wl,-soname,$(OBJECT_NAME) $(SYSROOT) $(OBJ) -o $(OUTPUT_DIR)$@
+endif
 
 %.o: %.c
 	$(info Compiling $<)
@@ -54,10 +54,6 @@ $(OBJECT_NAME): $(OBJ)
 %.o: %.S
 	$(info Compiling $<)
 	$(AS) -c $< -o $@
-
-%.o: %.asm
-	$(info Compiling $<)
-	$(NASM) $< -f $(ASM_ARCH) -o $@
 
 clean:
 	rm -f $(OBJ)

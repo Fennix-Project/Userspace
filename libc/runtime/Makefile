@@ -1,8 +1,8 @@
 # Config file
 include ../../../Makefile.conf
 
-CC = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)gcc
-AS = ../../../$(TC_COMPILER_PATH)/$(TC_COMPILER_ARCH)as
+CC = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)gcc
+AS = ../../../$(COMPILER_PATH)/$(COMPILER_ARCH)as
 NASM = /usr/bin/nasm
 
 C_SOURCES = $(shell find ./ -type f -name '*.c')

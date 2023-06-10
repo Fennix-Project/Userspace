@@ -5,14 +5,14 @@
 
 typedef enum
 {
-    P_ALL, /* Wait for any child. */
-    P_PID, /* Wait for specified process. */
-    P_PGID /* Wait for members of process group. */
+	P_ALL, /* Wait for any child. */
+	P_PID, /* Wait for specified process. */
+	P_PGID /* Wait for members of process group. */
 } idtype_t;
 
 typedef struct
 {
-    int stub;
+	int stub;
 } siginfo_t;
 
 #include <bits/waitstatus.h>

@@ -11,12 +11,12 @@ extern fct __fini_array_start[0], __fini_array_end[0];
 
 void __libc_init_array(void)
 {
-    for (fct *func = __init_array_start; func != __init_array_end; func++)
-        (*func)();
+	for (fct *func = __init_array_start; func != __init_array_end; func++)
+		(*func)();
 }
 
 void __libc_fini_array(void)
 {
-    for (fct *func = __fini_array_start; func != __fini_array_end; func++)
-        (*func)();
+	for (fct *func = __fini_array_start; func != __fini_array_end; func++)
+		(*func)();
 }
