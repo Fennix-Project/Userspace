@@ -17,6 +17,13 @@ typedef struct
 
 #include <bits/waitstatus.h>
 
+#define WCONTINUED 1
+#define WNOHANG 2
+#define WUNTRACED 4
+#define WEXITED 8
+#define WNOWAIT 16
+#define WSTOPPED 32
+
 /**
  * @brief Macro for extracting the exit status from a status value.
  *

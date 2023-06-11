@@ -10,6 +10,7 @@
 #endif // !PRIVATE
 
 typedef int __pid_t;
+typedef int __ssize_t;
 typedef unsigned int __id_t;
 typedef unsigned int __useconds_t;
 
@@ -26,6 +27,11 @@ typedef __id_t id_t;
 #ifndef __useconds_t_defined
 typedef __useconds_t useconds_t;
 #define __useconds_t_defined
+#endif
+
+#ifndef __ssize_t_defined
+typedef __ssize_t ssize_t;
+#define __ssize_t_defined
 #endif
 
 #endif
