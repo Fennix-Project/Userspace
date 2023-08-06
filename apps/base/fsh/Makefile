@@ -28,7 +28,7 @@ endif
 OBJ = $(C_SOURCES:.c=.o) $(CPP_SOURCES:.cpp=.o) $(ASM_SOURCES:.asm=.o) $(S_SOURCES:.S=.o) $(PSF_SOURCES:.psf=.o) $(BMP_SOURCES:.bmp=.o)
 
 SYSROOT = --sysroot=$(WORKSPACE)out/
-FILENAME = echo
+FILENAME = fsh
 
 HEADERS = $(sort $(dir $(wildcard $(WORKSPACE)out/include/*)))
 

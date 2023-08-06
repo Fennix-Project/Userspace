@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/wait.h>
-#include <aux.h>
+#include "aux.h"
 
 #include <libinit/init.h>
 #define print(m, ...) init_log(m, ##__VA_ARGS__)

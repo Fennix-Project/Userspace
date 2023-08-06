@@ -4,3 +4,9 @@
 [submodule "mlibc"]
 	path = mlibc
 	url = https://github.com/Fennix-Project/mlibc.git
+[submodule "apps/base/bash"]
+	path = apps/base/bash
+	url = https://github.com/Fennix-Project/bash.git
+[submodule "musl"]
+	path = musl
+	url = https://github.com/Fennix-Project/musl.git

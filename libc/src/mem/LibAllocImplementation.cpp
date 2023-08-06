@@ -17,10 +17,10 @@ extern "C" int liballoc_unlock()
 
 extern "C" void *liballoc_alloc(size_t Pages)
 {
-	return (void *)syscall1(_RequestPages, Pages);
+	return (void *)syscall1(sys_RequestPages, Pages);
 }
 
 extern "C" int liballoc_free(void *Address, size_t Pages)
 {
-	return syscall2(_FreePages, (uint64_t)Address, Pages);
+	return syscall2(sys_FreePages, (uint64_t)Address, Pages);
 }

@@ -1,6 +1,6 @@
 build:
-	cp -r include/* ../out/usr/include
-	cp ../../Kernel/syscalls.h ../out/usr/include/sys
+	cp -r include/* ../out/include
+	cp ../../Kernel/syscalls.h ../out/include/fennix/syscall.h
 	make -C runtime build
 	make -C src build
 	make -C ElfInterpreter build

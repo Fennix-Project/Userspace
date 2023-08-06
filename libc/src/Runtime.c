@@ -1,4 +1,4 @@
-#include <sys/syscalls.h>
+#include <fennix/syscall.h>
 #include <sys/types.h> // For PUBLIC
 
 extern void __libc_init_array(void);
@@ -17,7 +17,7 @@ PUBLIC void _exit(int Code)
 {
 	__libc_fini_std();
 	__libc_fini_array();
-	syscall1(_Exit, (long)Code);
+	syscall1(sys_Exit, (long)Code);
 	while (1)
 		;
 }

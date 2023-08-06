@@ -30,10 +30,10 @@ OBJ = $(C_SOURCES:.c=.o) $(CPP_SOURCES:.cpp=.o) $(ASM_SOURCES:.asm=.o) $(S_SOURC
 SYSROOT = --sysroot=$(WORKSPACE)out/
 FILENAME = init
 
-HEADERS = $(sort $(dir $(wildcard $(WORKSPACE)out/usr/include/*)))
+HEADERS = $(sort $(dir $(wildcard $(WORKSPACE)out/include/*)))
 
 LDFLAGS =
-CFLAGS = -I$(WORKSPACE)out/usr/include			\
+CFLAGS = -I$(WORKSPACE)out/include				\
 	-DGIT_COMMIT='"$(GIT_COMMIT)"'				\
 	-DGIT_COMMIT_SHORT='"$(GIT_COMMIT_SHORT)"'
 WARNCFLAG = -Wall -Wextra

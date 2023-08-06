@@ -5,22 +5,22 @@
 
 uintptr_t RequestPages(size_t Count)
 {
-	return syscall1(_RequestPages, Count);
+	return syscall1(sys_RequestPages, Count);
 }
 
 int FreePages(uintptr_t Address, size_t Count)
 {
-	return syscall2(_FreePages, Address, Count);
+	return syscall2(sys_FreePages, Address, Count);
 }
 
 int IPC(int Command, int Type, int ID, int Flags, void *Buffer, size_t Size)
 {
-	return syscall6(_IPC, (long)Command, (long)Type, (long)ID, (long)Flags, (long)Buffer, (long)Size);
+	return syscall6(sys_IPC, (long)Command, (long)Type, (long)ID, (long)Flags, (long)Buffer, (long)Size);
 }
 
 uintptr_t KernelCTL(int Command, uint64_t Arg1, uint64_t Arg2, uint64_t Arg3, uint64_t Arg4)
 {
-	return syscall5(_KernelCTL, Command, Arg1, Arg2, Arg3, Arg4);
+	return syscall5(sys_KernelCTL, Command, Arg1, Arg2, Arg3, Arg4);
 }
 
 int abs(int i) { return i < 0 ? -i : i; }
@@ -112,38 +112,38 @@ int strcmp(const char *l, const char *r)
 
 struct Elf64_Dyn ELFGetDynamicTag(char *Path, enum DynamicTags Tag)
 {
-	void *KP = syscall2(_FileOpen, Path, (long)"r");
-	if (KP == NULL)
-		syscall1(_Exit, -0xF17E);
+	int fd = syscall2(sys_FileOpen, Path, (long)"r");
+	if (fd < 0)
+		syscall1(sys_Exit, -0xF17E);
 
 	Elf64_Ehdr ELFHeader;
-	syscall3(_FileRead, KP, &ELFHeader, sizeof(Elf64_Ehdr));
+	syscall3(sys_FileRead, fd, &ELFHeader, sizeof(Elf64_Ehdr));
 
 	Elf64_Phdr ItrProgramHeader;
 	for (Elf64_Half i = 0; i < ELFHeader.e_phnum; i++)
 	{
 		// memcpy(&ItrProgramHeader, (uint8_t *)ElfFile + ELFHeader.e_phoff + ELFHeader.e_phentsize * i, sizeof(Elf64_Phdr));
-		syscall3(_FileSeek, KP, ELFHeader.e_phoff + ELFHeader.e_phentsize * i, SEEK_SET);
-		syscall3(_FileRead, KP, &ItrProgramHeader, sizeof(Elf64_Phdr));
+		syscall3(sys_FileSeek, fd, ELFHeader.e_phoff + ELFHeader.e_phentsize * i, SYSCALL_SEEK_SET);
+		syscall3(sys_FileRead, fd, &ItrProgramHeader, sizeof(Elf64_Phdr));
 		if (ItrProgramHeader.p_type == PT_DYNAMIC)
 		{
 			struct Elf64_Dyn Dynamic; // = (struct Elf64_Dyn *)((uint8_t *)ElfFile + ItrProgramHeader.p_offset);
-			syscall3(_FileSeek, KP, ItrProgramHeader.p_offset, SEEK_SET);
-			syscall3(_FileRead, KP, &Dynamic, ItrProgramHeader.p_filesz);
+			syscall3(sys_FileSeek, fd, ItrProgramHeader.p_offset, SYSCALL_SEEK_SET);
+			syscall3(sys_FileRead, fd, &Dynamic, ItrProgramHeader.p_filesz);
 			for (size_t i = 0; i < ItrProgramHeader.p_filesz / sizeof(struct Elf64_Dyn); i++)
 			{
 				if (Dynamic.d_tag == Tag || Dynamic.d_tag == DT_NULL)
 				{
-					syscall1(_FileClose, KP);
+					syscall1(sys_FileClose, fd);
 					return Dynamic;
 				}
 
-				syscall3(_FileSeek, KP, ItrProgramHeader.p_offset + (i + 1) * sizeof(struct Elf64_Dyn), SEEK_SET);
-				syscall3(_FileRead, KP, &Dynamic, sizeof(struct Elf64_Dyn));
+				syscall3(sys_FileSeek, fd, ItrProgramHeader.p_offset + (i + 1) * sizeof(struct Elf64_Dyn), SYSCALL_SEEK_SET);
+				syscall3(sys_FileRead, fd, &Dynamic, sizeof(struct Elf64_Dyn));
 			}
 		}
 	}
-	syscall1(_FileClose, KP);
+	syscall1(sys_FileClose, fd);
 	return (struct Elf64_Dyn){0};
 }
 
@@ -168,12 +168,12 @@ char *GetELFStringTable(Elf64_Ehdr *Header)
 
 Elf64_Sym ELFLookupSymbol(char *Path, const char *Name)
 {
-	void *KP = syscall2(_FileOpen, Path, (long)"r");
-	if (KP == NULL)
-		syscall1(_Exit, -0xF17E);
+	int fd = syscall2(sys_FileOpen, Path, (long)"r");
+	if (fd < 0)
+		syscall1(sys_Exit, -0xF17E);
 
 	Elf64_Ehdr ELFHeader;
-	syscall3(_FileRead, KP, &ELFHeader, sizeof(Elf64_Ehdr));
+	syscall3(sys_FileRead, fd, &ELFHeader, sizeof(Elf64_Ehdr));
 
 	Elf64_Shdr SymbolTable;
 	Elf64_Shdr StringTable;
@@ -183,20 +183,20 @@ Elf64_Sym ELFLookupSymbol(char *Path, const char *Name)
 	for (Elf64_Half i = 0; i < ELFHeader.e_shnum; i++)
 	{
 		Elf64_Shdr shdr;
-		syscall3(_FileSeek, KP,
+		syscall3(sys_FileSeek, fd,
 				 ELFHeader.e_shoff + ELFHeader.e_shentsize * i,
-				 SEEK_SET);
-		syscall3(_FileRead, KP, &shdr, sizeof(Elf64_Shdr));
+				 SYSCALL_SEEK_SET);
+		syscall3(sys_FileRead, fd, &shdr, sizeof(Elf64_Shdr));
 
 		switch (shdr.sh_type)
 		{
 		case SHT_SYMTAB:
 		{
 			SymbolTable = shdr;
-			syscall3(_FileSeek, KP,
+			syscall3(sys_FileSeek, fd,
 					 ELFHeader.e_shoff + ELFHeader.e_shentsize * shdr.sh_link,
-					 SEEK_SET);
-			syscall3(_FileRead, KP, &StringTable, sizeof(Elf64_Shdr));
+					 SYSCALL_SEEK_SET);
+			syscall3(sys_FileRead, fd, &StringTable, sizeof(Elf64_Shdr));
 			break;
 		}
 		default:
@@ -208,7 +208,7 @@ Elf64_Sym ELFLookupSymbol(char *Path, const char *Name)
 
 	if (SymbolTable.sh_size == 0 || StringTable.sh_size == 0)
 	{
-		syscall1(_FileClose, KP);
+		syscall1(sys_FileClose, fd);
 		return (Elf64_Sym){0};
 	}
 
@@ -216,19 +216,19 @@ Elf64_Sym ELFLookupSymbol(char *Path, const char *Name)
 	{
 		// Symbol = (Elf64_Sym *)((uintptr_t)Header + SymbolTable->sh_offset + (i * sizeof(Elf64_Sym)));
 		// String = (char *)((uintptr_t)Header + StringTable->sh_offset + Symbol->st_name);
-		syscall3(_FileSeek, KP, SymbolTable.sh_offset + (i * sizeof(Elf64_Sym)), SEEK_SET);
-		syscall3(_FileRead, KP, &Symbol, sizeof(Elf64_Sym));
+		syscall3(sys_FileSeek, fd, SymbolTable.sh_offset + (i * sizeof(Elf64_Sym)), SYSCALL_SEEK_SET);
+		syscall3(sys_FileRead, fd, &Symbol, sizeof(Elf64_Sym));
 
-		syscall3(_FileSeek, KP, StringTable.sh_offset + Symbol.st_name, SEEK_SET);
-		syscall3(_FileRead, KP, &String, sizeof(char *));
+		syscall3(sys_FileSeek, fd, StringTable.sh_offset + Symbol.st_name, SYSCALL_SEEK_SET);
+		syscall3(sys_FileRead, fd, &String, sizeof(char *));
 
 		if (strcmp(String, Name) == 0)
 		{
-			syscall1(_FileClose, KP);
+			syscall1(sys_FileClose, fd);
 			return Symbol;
 		}
 	}
 
-	syscall1(_FileClose, KP);
+	syscall1(sys_FileClose, fd);
 	return (Elf64_Sym){0};
 }

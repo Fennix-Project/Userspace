@@ -41,8 +41,6 @@ struct _IO_FILE
 	struct _IO_marker *_markers;
 	struct _IO_FILE *_chain;
 	int _fileno;
-
-	void *KernelPrivate;
 };
 
 typedef struct _IO_FILE FILE;

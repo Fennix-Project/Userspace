@@ -3,12 +3,12 @@
 #include <errno.h>
 #include "../../../Kernel/syscalls.h"
 
-unsigned int sleep(unsigned int seconds)
+PUBLIC unsigned int sleep(unsigned int seconds)
 {
-	return syscall1(_Sleep, seconds * 1000000);
+	return syscall1(sys_Sleep, seconds * 1000000);
 }
 
-int usleep(useconds_t usec)
+PUBLIC int usleep(useconds_t usec)
 {
-	return syscall1(_Sleep, usec);
+	return syscall1(sys_Sleep, usec);
 }

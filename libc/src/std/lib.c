@@ -2,13 +2,13 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <sys/syscalls.h>
+#include <fennix/syscall.h>
 
 #include "../mem/liballoc_1_1.h"
 
 PUBLIC void abort(void)
 {
-	syscall1(_Exit, -0xAB057);
+	syscall1(sys_Exit, -0xAB057);
 	while (1)
 		;
 }

@@ -49,8 +49,9 @@
 #include <cstdint>
 #include <climits>
 #else
-#include <types.h>
+#include <stdint.h>
 #include <limits.h>
+#include <stdbool.h>
 #endif // __cplusplus
 
 #if PRINTF_ALIAS_STANDARD_FUNCTION_NAMES

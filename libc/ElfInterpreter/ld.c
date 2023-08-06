@@ -90,9 +90,6 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibsCollection *Info, long RelIndex))()
 		which determines the end of the list. */
 	while (CurLib->Valid)
 	{
-		KernelCTL(KCTL_GET_ABSOLUTE_PATH, CurLib->LibraryName,
-				  LibraryPathBuffer, sizeof(LibraryPathBuffer), 0);
-
 		PrintDbg("-- ");
 		PrintDbg(LibraryPathBuffer);
 		PrintDbg(" ");
@@ -105,46 +102,46 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibsCollection *Info, long RelIndex))()
 		Elf64_Ehdr lib_Header;
 		Elf64_Ehdr app_Header;
 
-		void *KP_lib = syscall2(_FileOpen, LibraryPathBuffer, "r");
-		void *KP_app = syscall2(_FileOpen, ParentPath, "r");
+		int fd_lib = syscall2(sys_FileOpen, LibraryPathBuffer, "r");
+		int fd_app = syscall2(sys_FileOpen, ParentPath, "r");
 
-		if (!KP_lib)
+		if (fd_lib < 0)
 		{
 			PrintNL("Failed to open library");
 			goto RetryNextLib;
 		}
 
-		if (!KP_app)
+		if (fd_app < 0)
 		{
 			PrintNL("Failed to open application");
 			goto RetryNextLib;
 		}
 
-		syscall3(_FileRead, KP_lib, &lib_Header, sizeof(Elf64_Ehdr));
-		syscall3(_FileRead, KP_app, &app_Header, sizeof(Elf64_Ehdr));
+		syscall3(sys_FileRead, fd_lib, &lib_Header, sizeof(Elf64_Ehdr));
+		syscall3(sys_FileRead, fd_app, &app_Header, sizeof(Elf64_Ehdr));
 
 		Elf64_Phdr ItrProgramHeader;
 
 		for (Elf64_Half i = 0; i < lib_Header.e_phnum; i++)
 		{
-			syscall3(_FileSeek, KP_lib,
+			syscall3(sys_FileSeek, fd_lib,
 					 lib_Header.e_phoff +
 						 lib_Header.e_phentsize * i,
-					 SEEK_SET);
+					 SYSCALL_SEEK_SET);
 
-			syscall3(_FileRead, KP_lib, &ItrProgramHeader, sizeof(Elf64_Phdr));
+			syscall3(sys_FileRead, fd_lib, &ItrProgramHeader, sizeof(Elf64_Phdr));
 
 			lib_BaseAddress = MIN(lib_BaseAddress, ItrProgramHeader.p_vaddr);
 		}
 
 		for (Elf64_Half i = 0; i < app_Header.e_phnum; i++)
 		{
-			syscall3(_FileSeek, KP_app,
+			syscall3(sys_FileSeek, fd_app,
 					 app_Header.e_phoff +
 						 app_Header.e_phentsize * i,
-					 SEEK_SET);
+					 SYSCALL_SEEK_SET);
 
-			syscall3(_FileRead, KP_app, &ItrProgramHeader, sizeof(Elf64_Phdr));
+			syscall3(sys_FileRead, fd_app, &ItrProgramHeader, sizeof(Elf64_Phdr));
 
 			app_BaseAddress = MIN(app_BaseAddress, ItrProgramHeader.p_vaddr);
 		}
@@ -268,7 +265,7 @@ FailEnd:
 	Print(DbgBuff);
 	PrintNL(" not found");
 	int ExitCode = 0x51801;
-	syscall1(_Exit, ExitCode);
+	syscall1(sys_Exit, ExitCode);
 	while (1) // Make sure we don't return
 		;
 }
@@ -280,9 +277,9 @@ int ld_main()
 	uintptr_t KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
 	do
 	{
-		syscall1(_Sleep, 250);
+		syscall1(sys_Sleep, 250);
 		KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
-	} while (KCTL_ret == SYSCALL_ACCESS_DENIED);
+	} while (KCTL_ret == false);
 
 	if (KCTL_ret == false)
 		return -1;
@@ -307,111 +304,21 @@ bool ELFAddLazyResolverToGOT(void *MemoryImage, struct LibsCollection *Libs)
 /* Actual load */
 int ld_load(int argc, char *argv[], char *envp[])
 {
-	PrintDbgNL("!");
-	uintptr_t PageSize = KernelCTL(KCTL_GET_PAGE_SIZE, 0, 0, 0, 0);
-	int PagesForIPCDataStruct = sizeof(InterpreterIPCData) / PageSize + 1;
-	int PagesForLibsCollectionStruct = sizeof(struct LibsCollection) / PageSize + 1;
-
-	InterpreterIPCData *IPCBuffer =
-		(InterpreterIPCData *)RequestPages(PagesForIPCDataStruct);
-
-	int IPC_ID = IPC(IPC_CREATE, IPC_TYPE_MessagePassing,
-					 0, 0, "LOAD", sizeof(InterpreterIPCData));
-	while (true)
-	{
-		IPC(IPC_LISTEN, IPC_TYPE_MessagePassing, IPC_ID, 1, NULL, 0);
-		IPC(IPC_WAIT, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
-		int IPCResult = IPC(IPC_READ, IPC_TYPE_MessagePassing,
-							IPC_ID, 0, IPCBuffer, PageSize);
-
-		if (IPCResult == IPC_E_CODE_Success)
-			break;
-	}
-
-	struct LibsCollection *LibsForLazyResolver =
-		(struct LibsCollection *)RequestPages(PagesForLibsCollectionStruct);
-
-	for (short i = 0; i < 64; i++)
-	{
-		if (IPCBuffer->Libraries[i].Name[0] == '\0')
-			break;
-
-		uintptr_t lib_mm_image =
-			KernelCTL(KCTL_GET_ELF_LIB_MEMORY_IMAGE,
-					  (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
-		if (lib_mm_image == 0)
-		{
-			enum SyscallsErrorCodes ret =
-				KernelCTL(KCTL_REGISTER_ELF_LIB,
-						  (uint64_t)IPCBuffer->Libraries[i].Name,
-						  (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0);
-			if (ret != SYSCALL_OK)
-			{
-				PrintNL("Failed to register ELF lib");
-				return -0x11B;
-			}
-			lib_mm_image = KernelCTL(KCTL_GET_ELF_LIB_MEMORY_IMAGE,
-									 (uint64_t)IPCBuffer->Libraries[i].Name, 0, 0, 0);
-		}
-
-		if (LibsForLazyResolver->Next == NULL)
-		{
-			LibsForLazyResolver->Valid = true;
-			LibsForLazyResolver->LibraryMemoryImage = (uintptr_t)lib_mm_image;
-			LibsForLazyResolver->ParentMemoryImage = (uintptr_t)IPCBuffer->MemoryImage;
-			for (short j = 0; j < sizeof(LibsForLazyResolver->LibraryName); j++)
-				LibsForLazyResolver->LibraryName[j] = IPCBuffer->Libraries[i].Name[j];
-
-			LibsForLazyResolver->Next =
-				(struct LibsCollection *)RequestPages(PagesForLibsCollectionStruct);
-			memset(LibsForLazyResolver->Next, 0, sizeof(struct LibsCollection));
-			continue;
-		}
-
-		struct LibsCollection *CurrentLib = LibsForLazyResolver;
-		while (CurrentLib->Next != NULL)
-			CurrentLib = CurrentLib->Next;
-
-		CurrentLib->Valid = true;
-		CurrentLib->LibraryMemoryImage = (uintptr_t)lib_mm_image;
-		CurrentLib->ParentMemoryImage = (uintptr_t)IPCBuffer->MemoryImage;
-		for (short j = 0; j < sizeof(LibsForLazyResolver->LibraryName); j++)
-			CurrentLib->LibraryName[j] = IPCBuffer->Libraries[i].Name[j];
-
-		CurrentLib->Next =
-			(struct LibsCollection *)RequestPages(PagesForLibsCollectionStruct);
-		memset(CurrentLib->Next, 0, sizeof(struct LibsCollection));
-	}
-
-	struct LibsCollection *CurrentLib = LibsForLazyResolver;
-
-	for (int i = 0; i < sizeof(ParentPath); i++)
-		ParentPath[i] = IPCBuffer->Path[i];
-
-	if (!ELFAddLazyResolverToGOT(IPCBuffer->MemoryImage,
-								 LibsForLazyResolver))
-	{
-		PrintNL("Failed to add lazy resolver to GOT");
-		return -0x607;
-	}
-
-	void *KP = syscall2(_FileOpen, ParentPath, (long)"r");
-	if (KP == NULL)
-	{
-		PrintNL("Failed to open file");
-		syscall1(_Exit, -0xF17E);
-	}
-
-	Elf64_Ehdr ELFHeader;
-	syscall3(_FileRead, KP, &ELFHeader, sizeof(Elf64_Ehdr));
-
-	Elf64_Addr Entry = ELFHeader.e_entry;
-
-	syscall1(_FileClose, KP);
-
-	IPC(IPC_DELETE, IPC_TYPE_MessagePassing, IPC_ID, 0, NULL, 0);
-	FreePages((uintptr_t)IPCBuffer, PagesForIPCDataStruct);
-
 	PrintDbgNL("Calling entry point");
-	return ((int (*)(int, char *[], char *[]))Entry)(argc, argv, envp);
+
+	// void *KP = syscall2(sys_FileOpen, ParentPath, (long)"r");
+	// if (KP == NULL)
+	// {
+	// 	PrintNL("Failed to open file");
+	// 	syscall1(sys_Exit, -0xF17E);
+	// }
+
+	// Elf64_Ehdr ELFHeader;
+	// syscall3(sys_FileRead, KP, &ELFHeader, sizeof(Elf64_Ehdr));
+
+	// Elf64_Addr Entry = ELFHeader.e_entry;
+
+	// syscall1(sys_FileClose, KP);
+
+	// return ((int (*)(int, char *[], char *[]))Entry)(argc, argv, envp);
 }

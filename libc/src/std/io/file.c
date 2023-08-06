@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <sys/syscalls.h>
 #include <errno.h>
 
+#include <fennix/syscall.h>
 #include <sys/types.h> // For PUBLIC
 
 PUBLIC FILE *stdin = NULL;
@@ -12,12 +12,12 @@ PUBLIC FILE *stderr = NULL;
 
 PUBLIC FILE *fopen(const char *filename, const char *mode)
 {
-	void *KPrivate = (void *)syscall2(_FileOpen, (uint64_t)filename, (uint64_t)mode);
-	if (IsSyscallError(KPrivate))
+	int fd = syscall2(sys_FileOpen, (uint64_t)filename, (uint64_t)mode);
+	if (fd < 0)
 		return NULL;
 
 	FILE *FilePtr = malloc(sizeof(FILE));
-	FilePtr->KernelPrivate = KPrivate;
+	FilePtr->_fileno = fd;
 	return FilePtr;
 }
 
@@ -29,8 +29,8 @@ PUBLIC size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 		return 0;
 	}
 
-	syscall3(_FileSeek, stream->KernelPrivate, stream->_offset, SEEK_SET);
-	return syscall3(_FileRead, (uint64_t)stream->KernelPrivate, (uint64_t)ptr, size * nmemb);
+	syscall3(sys_FileSeek, stream->_fileno, stream->_offset, SEEK_SET);
+	return syscall3(sys_FileRead, (uint64_t)stream->_fileno, (uint64_t)ptr, size * nmemb);
 }
 
 PUBLIC size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
@@ -41,8 +41,8 @@ PUBLIC size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 		return 0;
 	}
 
-	syscall3(_FileSeek, stream->KernelPrivate, stream->_offset, SEEK_SET);
-	return syscall3(_FileWrite, (uint64_t)stream->KernelPrivate, (uint64_t)ptr, size * nmemb);
+	syscall3(sys_FileSeek, stream->_fileno, stream->_offset, SEEK_SET);
+	return syscall3(sys_FileWrite, (uint64_t)stream->_fileno, (uint64_t)ptr, size * nmemb);
 }
 
 PUBLIC int fclose(FILE *fp)
@@ -53,9 +53,7 @@ PUBLIC int fclose(FILE *fp)
 		return EOF;
 	}
 
-	void *KP = fp->KernelPrivate;
-	free(fp);
-	return syscall1(_FileClose, (uint64_t)KP);
+	return syscall1(sys_FileClose, fp->_fileno);
 }
 
 PUBLIC off_t fseek(FILE *stream, off_t offset, int whence)
@@ -66,8 +64,8 @@ PUBLIC off_t fseek(FILE *stream, off_t offset, int whence)
 		return -1;
 	}
 
-	off_t new_offset = syscall3(_FileSeek, stream->KernelPrivate, offset, whence);
-	if (IsSyscallError(new_offset))
+	off_t new_offset = syscall3(sys_FileSeek, stream->_fileno, offset, whence);
+	if (new_offset < 0)
 		return -1;
 	stream->_offset = new_offset;
 	return new_offset;

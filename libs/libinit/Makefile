@@ -27,10 +27,11 @@ else ifeq ($(OSARCH), i386)
 ASM_ARCH := elf32
 endif
 
-CFLAGS := -fvisibility=hidden -fPIC -fPIE -I../include -I../../libc/include
+CFLAGS := -fvisibility=hidden -fPIC -fPIE -I../include -I../../out/include
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -DDEBUG -ggdb3 -O0 -fdiagnostics-color=always -fverbose-asm
+	LDFLAGS += -ggdb3 -O0
 endif
 
 build: $(OBJECT_NAME)

@@ -1,6 +1,15 @@
 #include <libinit/init.h>
 #include <unistd.h>
+#include <features.h>
 #include "printf.h"
+
+#ifdef __FENNIX_LIBC__
+#define cprintf printf_libinit
+#define cvprintf vprintf_libinit
+#else
+#define cprintf printf
+#define cvprintf vprintf
+#endif
 
 void init_log(const char *fmt, ...)
 {
@@ -10,12 +19,12 @@ void init_log(const char *fmt, ...)
 	__sync_synchronize();
 	log_lock = 1;
 
-	printf_libinit("\eCCCCCC[\e0088FFinit\eCCCCCC] \eAAAAAA");
+	cprintf("\eCCCCCC[\e0088FFinit\eCCCCCC] \eAAAAAA");
 	va_list args;
 	va_start(args, fmt);
-	vprintf_libinit(fmt, args);
+	cvprintf(fmt, args);
 	va_end(args);
-	printf_libinit("\eCCCCCC");
+	cprintf("\eCCCCCC");
 
 	log_lock = 0;
 	__sync_synchronize();
