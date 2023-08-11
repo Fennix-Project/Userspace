@@ -3,7 +3,6 @@
 		{
 			"name": "Fennix x64 (Linux, GCC, debug)",
 			"includePath": [
-				"${workspaceFolder}/libc/include/**",
 				"${workspaceFolder}/out/include/**",
 				"${workspaceFolder}/libs/include/**",
 				"${workspaceFolder}/libs/include"
@@ -55,7 +54,6 @@
 		{
 			"name": "Fennix x32 (Linux, GCC, debug)",
 			"includePath": [
-				"${workspaceFolder}/libc/include/**",
 				"${workspaceFolder}/out/include/**",
 				"${workspaceFolder}/libs/include/**",
 				"${workspaceFolder}/libs/include"

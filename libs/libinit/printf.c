@@ -222,7 +222,7 @@ typedef long printf_signed_value_t;
 // precisions, offsets into buffers used for printing and the sizes
 // of these buffers. instead, we use:
 typedef unsigned int printf_size_t;
-#define PRINTF_MAX_POSSIBLE_BUFFER_SIZE INT_MAX
+#define PRINTF_MAX_POSSIBLE_BUFFER_SIZE __INT_MAX__
 // If we were to nitpick, this would actually be INT_MAX + 1,
 // since INT_MAX is the maximum return value, which excludes the
 // trailing '\0'.
