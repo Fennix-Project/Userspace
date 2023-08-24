@@ -22,10 +22,8 @@ endif
 
 ifeq ($(USERSPACE_STATIC_LIBS), 1)
 MUSL_CONFIGURE_FLAGS := --enable-static --disable-shared
-MLIBC_CONFIGURE_FLAGS := -Ddefault_library=static
 else
 MUSL_CONFIGURE_FLAGS := --enable-shared --enable-static
-MLIBC_CONFIGURE_FLAGS := -Ddefault_library=both
 endif
 
 build_musl:
@@ -41,15 +39,6 @@ build_musl:
 	ln -s /lib/libc.so ./ld.so
 	mkdir -p out/include/fennix
 	cp ../Kernel/syscalls.h out/include/fennix/syscall.h
-
-build_mlibc:
-	cp ../Kernel/syscalls.h ./mlibc/sysdeps/fennix/include/fennix/syscall.h
-ifeq ($(wildcard cache/mlibc),)
-	cd mlibc && meson $(MLIBC_CONFIGURE_FLAGS) --cross-file ci/fennix.cross-file ../cache/mlibc
-endif
-	cd cache/mlibc && DESTDIR=../../out ninja install
-	mv out/usr/local/include/* out/include/
-	mv out/usr/local/lib/* out/lib/
 
 create_out:
 	rm -rf out
@@ -68,8 +57,6 @@ ifeq ($(USE_LIBC), internal)
 	make -C libc build
 else ifeq ($(USE_LIBC), musl)
 	$(MAKE) build_musl
-else ifeq ($(USE_LIBC), mlibc)
-	$(MAKE) build_mlibc
 endif
 	make -C libs build
 	make -C apps build

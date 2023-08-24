@@ -25,12 +25,32 @@ ifeq ($(wildcard $(CACHE_DIR)/bash),)
 	--host=$(TARGET) \
 	--enable-minimal-config
 endif
-	make -C $(CACHE_DIR)/bash -j$(shell nproc)
+	LDFLAGS="--static" make -C $(CACHE_DIR)/bash -j$(shell nproc)
 	make -C $(CACHE_DIR)/bash install
+
+BUSYBOX_CROSS_PATH := $(cwd)/../../../tools/cross/bin/$(TARGET)-
+
+build_busybox:
+ifeq ($(wildcard $(CACHE_DIR)/busybox),)
+	mkdir -p $(CACHE_DIR)/busybox
+	cd $(CACHE_DIR)/busybox && \
+	make KBUILD_SRC=../../apps/base/busybox \
+	CROSS_COMPILE=$(BUSYBOX_CROSS_PATH) \
+	-f ../../apps/base/busybox/Makefile \
+	allnoconfig
+endif
+	cd $(CACHE_DIR)/busybox && \
+	make -C $(CACHE_DIR)/busybox \
+	CROSS_COMPILE=$(BUSYBOX_CROSS_PATH) -j$(shell nproc)
+	cd $(CACHE_DIR)/busybox && \
+	make -C $(CACHE_DIR)/busybox \
+	CONFIG_PREFIX=$(PREFIX) \
+	CROSS_COMPILE=$(BUSYBOX_CROSS_PATH) install
 
 build:
 	make -C echo build
 	make -C fsh build
+#	$(MAKE) build_busybox
 #	$(MAKE) build_bash
 
 clean:

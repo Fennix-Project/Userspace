@@ -52,7 +52,7 @@ build: $(FILENAME)
 
 $(FILENAME): $(OBJ)
 	$(info Linking $@)
-	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -linit -o $@
+	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -o $@
 
 %.o: %.c $(HEADERS)
 	$(info Compiling $<)

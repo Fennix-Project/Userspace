@@ -10,6 +10,12 @@ PUBLIC FILE *stdin = NULL;
 PUBLIC FILE *stdout = NULL;
 PUBLIC FILE *stderr = NULL;
 
+PUBLIC FILE *freopen(const char *filename, const char *mode, FILE *stream)
+{
+	errno = ENOSYS;
+	return NULL;
+}
+
 PUBLIC FILE *fopen(const char *filename, const char *mode)
 {
 	int fd = syscall2(sys_FileOpen, (uint64_t)filename, (uint64_t)mode);

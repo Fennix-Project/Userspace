@@ -1,27 +1,27 @@
+#include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/wait.h>
 #include "aux.h"
 
-#include <libinit/init.h>
-#define print(m, ...) init_log(m, ##__VA_ARGS__)
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 void test_args(int argc, char *argv[], char *envp[])
 {
-	print("%p %p %p\n", (void *)(uint64_t)&argc, (void *)&argv, (void *)&envp);
-	print("I have %d arguments\n", argc);
+	printf("%p %p %p\n", (void *)(uint64_t)&argc, (void *)&argv, (void *)&envp);
+	printf("I have %d arguments\n", argc);
 	for (int i = 0; i < argc; i++)
-		print("argv[%d] = (%p) %s\n", i, argv[i], argv[i]);
+		printf("argv[%d] = (%p) %s\n", i, argv[i], argv[i]);
 
 	int envc = 0;
 	while (envp[envc] != NULL)
 		envc++;
 
-	print("I have %d environment variables\n", envc);
+	printf("I have %d environment variables\n", envc);
 	for (int i = 0; i < envc; i++)
-		print("envp[%d] = (%p) %s\n", i, envp[i], envp[i]);
+		printf("envp[%d] = (%p) %s\n", i, envp[i], envp[i]);
 
 	Elf64_auxv_t *auxv;
 	char **e = envp;
@@ -30,22 +30,30 @@ void test_args(int argc, char *argv[], char *envp[])
 		;
 
 	for (auxv = (Elf64_auxv_t *)e; auxv->a_type != AT_NULL; auxv++)
-		print("auxv: %ld %#lx\n", auxv->a_type, auxv->a_un.a_val);
+		printf("auxv: %ld %#lx\n", auxv->a_type, auxv->a_un.a_val);
 }
 
 int main(int argc, char *argv[], char *envp[])
 {
-	// test_args(argc, argv, envp);
+	freopen("/dev/tty", "w", stdout);
+	freopen("/dev/tty", "w", stderr);
+
+	test_args(argc, argv, envp);
 	FILE *test = fopen("/Test.txt", "r");
 	if (test == NULL)
 	{
-		print("Failed to open file\n");
+		printf("Failed to open file\n");
 		return 1;
 	}
 
-	char buf[1024];
-	int read = fread(buf, 1024, 1, test);
-	print("/Test.txt (%ld): %s\n", read, buf);
+	printf("Test.txt contents: ");
+	char ch;
+	do
+	{
+		ch = fgetc(test);
+		putchar(ch);
+	} while (ch != EOF);
+
 	fclose(test);
 
 	pid_t pid;
@@ -55,7 +63,7 @@ int main(int argc, char *argv[], char *envp[])
 
 	if (pid == 0) // Child process
 	{
-		print("Creating shell process\n");
+		printf("Creating shell process\n");
 		char *args[] = {"/bin/sh", NULL};
 		execv(args[0], args);
 		exit(EXIT_FAILURE);
@@ -65,18 +73,18 @@ int main(int argc, char *argv[], char *envp[])
 		wait(&status);
 		if (WIFEXITED(status))
 		{
-			print("Child process exited with code: %d\n", WEXITSTATUS(status));
+			printf("Child process exited with code: %d\n", WEXITSTATUS(status));
 			return WEXITSTATUS(status);
 		}
 		else
 		{
-			print("Execution failed.\n");
+			printf("Execution failed.\n");
 			exit(EXIT_FAILURE);
 		}
 	}
 	else
 	{
-		print("\eFF0000Failed to create the process.\n");
+		printf("\eFF0000Failed to create the process.\n");
 		exit(EXIT_FAILURE);
 	}
 
