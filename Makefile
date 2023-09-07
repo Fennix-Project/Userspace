@@ -26,6 +26,10 @@ else
 MUSL_CONFIGURE_FLAGS := --enable-shared --enable-static
 endif
 
+ifeq ($(DEBUG), 1)
+MUSL_CONFIGURE_FLAGS += --enable-debug
+endif
+
 build_musl:
 	mkdir -p cache/musl
 	cd cache/musl && \
