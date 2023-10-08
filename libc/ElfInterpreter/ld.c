@@ -102,8 +102,8 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibsCollection *Info, long RelIndex))()
 		Elf64_Ehdr lib_Header;
 		Elf64_Ehdr app_Header;
 
-		int fd_lib = syscall2(sys_FileOpen, LibraryPathBuffer, "r");
-		int fd_app = syscall2(sys_FileOpen, ParentPath, "r");
+		int fd_lib = syscall2(sc_open, LibraryPathBuffer, "r");
+		int fd_app = syscall2(sc_open, ParentPath, "r");
 
 		if (fd_lib < 0)
 		{
@@ -117,31 +117,31 @@ void (*ELF_LAZY_RESOLVE_MAIN(struct LibsCollection *Info, long RelIndex))()
 			goto RetryNextLib;
 		}
 
-		syscall3(sys_FileRead, fd_lib, &lib_Header, sizeof(Elf64_Ehdr));
-		syscall3(sys_FileRead, fd_app, &app_Header, sizeof(Elf64_Ehdr));
+		syscall3(sc_read, fd_lib, &lib_Header, sizeof(Elf64_Ehdr));
+		syscall3(sc_read, fd_app, &app_Header, sizeof(Elf64_Ehdr));
 
 		Elf64_Phdr ItrProgramHeader;
 
 		for (Elf64_Half i = 0; i < lib_Header.e_phnum; i++)
 		{
-			syscall3(sys_FileSeek, fd_lib,
+			syscall3(sc_lseek, fd_lib,
 					 lib_Header.e_phoff +
 						 lib_Header.e_phentsize * i,
-					 SYSCALL_SEEK_SET);
+					 sc_SEEK_SET);
 
-			syscall3(sys_FileRead, fd_lib, &ItrProgramHeader, sizeof(Elf64_Phdr));
+			syscall3(sc_read, fd_lib, &ItrProgramHeader, sizeof(Elf64_Phdr));
 
 			lib_BaseAddress = MIN(lib_BaseAddress, ItrProgramHeader.p_vaddr);
 		}
 
 		for (Elf64_Half i = 0; i < app_Header.e_phnum; i++)
 		{
-			syscall3(sys_FileSeek, fd_app,
+			syscall3(sc_lseek, fd_app,
 					 app_Header.e_phoff +
 						 app_Header.e_phentsize * i,
-					 SYSCALL_SEEK_SET);
+					 sc_SEEK_SET);
 
-			syscall3(sys_FileRead, fd_app, &ItrProgramHeader, sizeof(Elf64_Phdr));
+			syscall3(sc_read, fd_app, &ItrProgramHeader, sizeof(Elf64_Phdr));
 
 			app_BaseAddress = MIN(app_BaseAddress, ItrProgramHeader.p_vaddr);
 		}
@@ -265,7 +265,7 @@ FailEnd:
 	Print(DbgBuff);
 	PrintNL(" not found");
 	int ExitCode = 0x51801;
-	syscall1(sys_Exit, ExitCode);
+	syscall1(sc_exit, ExitCode);
 	while (1) // Make sure we don't return
 		;
 }
@@ -274,15 +274,15 @@ FailEnd:
 int ld_main()
 {
 	/* Prevent race condition. */
-	uintptr_t KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
-	do
-	{
-		syscall1(sys_Sleep, 250);
-		KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
-	} while (KCTL_ret == false);
+	// uintptr_t KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
+	// do
+	// {
+	// 	syscall1(sys_Sleep, 250);
+	// 	KCTL_ret = KernelCTL(KCTL_IS_CRITICAL, 0, 0, 0, 0);
+	// } while (KCTL_ret == false);
 
-	if (KCTL_ret == false)
-		return -1;
+	// if (KCTL_ret == false)
+	// 	return -1;
 
 	/* Everything is ok, continue. */
 	return 0;
@@ -306,7 +306,7 @@ int ld_load(int argc, char *argv[], char *envp[])
 {
 	PrintDbgNL("Calling entry point");
 
-	// void *KP = syscall2(sys_FileOpen, ParentPath, (long)"r");
+	// void *KP = syscall2(sc_open, ParentPath, (long)"r");
 	// if (KP == NULL)
 	// {
 	// 	PrintNL("Failed to open file");
@@ -314,7 +314,7 @@ int ld_load(int argc, char *argv[], char *envp[])
 	// }
 
 	// Elf64_Ehdr ELFHeader;
-	// syscall3(sys_FileRead, KP, &ELFHeader, sizeof(Elf64_Ehdr));
+	// syscall3(sc_read, KP, &ELFHeader, sizeof(Elf64_Ehdr));
 
 	// Elf64_Addr Entry = ELFHeader.e_entry;
 

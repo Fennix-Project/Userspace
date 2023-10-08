@@ -8,7 +8,7 @@
 
 PUBLIC void abort(void)
 {
-	syscall1(sys_Exit, -0xAB057);
+	syscall1(sc_exit, -0xAB057);
 	while (1)
 		;
 }

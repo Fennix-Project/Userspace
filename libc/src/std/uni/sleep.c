@@ -5,10 +5,10 @@
 
 PUBLIC unsigned int sleep(unsigned int seconds)
 {
-	return syscall1(sys_Sleep, seconds * 1000000);
+	// return syscall1(sys_Sleep, seconds * 1000000);
 }
 
 PUBLIC int usleep(useconds_t usec)
 {
-	return syscall1(sys_Sleep, usec);
+	// return syscall1(sys_Sleep, usec);
 }

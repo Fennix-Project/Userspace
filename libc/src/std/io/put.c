@@ -13,7 +13,7 @@ PUBLIC int fputc(int c, FILE *stream)
 	//     return EOF;
 	// }
 	char str[2] = {c, '\0'};
-	return syscall3(sys_KernelCTL, KCTL_PRINT, str, 0);
+	// return syscall3(sys_KernelCTL, KCTL_PRINT, str, 0);
 }
 
 PUBLIC int putc(int c, FILE *stream) { return fputc(c, stream); }

@@ -18,7 +18,7 @@ PUBLIC FILE *freopen(const char *filename, const char *mode, FILE *stream)
 
 PUBLIC FILE *fopen(const char *filename, const char *mode)
 {
-	int fd = syscall2(sys_FileOpen, (uint64_t)filename, (uint64_t)mode);
+	int fd = syscall2(sc_open, (uint64_t)filename, (uint64_t)mode);
 	if (fd < 0)
 		return NULL;
 
@@ -35,8 +35,8 @@ PUBLIC size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 		return 0;
 	}
 
-	syscall3(sys_FileSeek, stream->_fileno, stream->_offset, SEEK_SET);
-	return syscall3(sys_FileRead, (uint64_t)stream->_fileno, (uint64_t)ptr, size * nmemb);
+	syscall3(sc_lseek, stream->_fileno, stream->_offset, SEEK_SET);
+	return syscall3(sc_read, (uint64_t)stream->_fileno, (uint64_t)ptr, size * nmemb);
 }
 
 PUBLIC size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
@@ -47,8 +47,8 @@ PUBLIC size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 		return 0;
 	}
 
-	syscall3(sys_FileSeek, stream->_fileno, stream->_offset, SEEK_SET);
-	return syscall3(sys_FileWrite, (uint64_t)stream->_fileno, (uint64_t)ptr, size * nmemb);
+	syscall3(sc_lseek, stream->_fileno, stream->_offset, SEEK_SET);
+	return syscall3(sc_write, (uint64_t)stream->_fileno, (uint64_t)ptr, size * nmemb);
 }
 
 PUBLIC int fclose(FILE *fp)
@@ -59,7 +59,7 @@ PUBLIC int fclose(FILE *fp)
 		return EOF;
 	}
 
-	return syscall1(sys_FileClose, fp->_fileno);
+	return syscall1(sc_close, fp->_fileno);
 }
 
 PUBLIC off_t fseek(FILE *stream, off_t offset, int whence)
@@ -70,7 +70,7 @@ PUBLIC off_t fseek(FILE *stream, off_t offset, int whence)
 		return -1;
 	}
 
-	off_t new_offset = syscall3(sys_FileSeek, stream->_fileno, offset, whence);
+	off_t new_offset = syscall3(sc_lseek, stream->_fileno, offset, whence);
 	if (new_offset < 0)
 		return -1;
 	stream->_offset = new_offset;

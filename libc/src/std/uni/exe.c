@@ -47,5 +47,5 @@ PUBLIC int execve(const char *pathname, char *const argv[], char *const envp[])
 
 PUBLIC pid_t fork(void)
 {
-    return syscall0(sys_Fork);
+    return syscall0(sc_fork);
 }

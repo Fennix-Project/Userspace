@@ -39,7 +39,7 @@ CFLAGS = -I$(WORKSPACE)out/include				\
 WARNCFLAG = -Wall -Wextra
 
 ifneq ($(OSARCH), aarch64)
-CFLAGS += -fstack-protector-all -fstack-clash-protection
+# CFLAGS += -fstack-protector-all -fstack-clash-protection
 endif
 
 ifeq ($(DEBUG), 1)
@@ -52,7 +52,7 @@ build: $(FILENAME)
 
 $(FILENAME): $(OBJ)
 	$(info Linking $@)
-	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -lssp -o $@
+	$(CC) $(LDFLAGS) $(SYSROOT) $(OBJ) -o $@
 
 %.o: %.c $(HEADERS)
 	$(info Compiling $<)

@@ -17,7 +17,7 @@ PUBLIC void _exit(int Code)
 {
 	__libc_fini_std();
 	__libc_fini_array();
-	syscall1(sys_Exit, (long)Code);
+	syscall1(sc_exit, (long)Code);
 	while (1)
 		;
 }

@@ -35,50 +35,61 @@ void test_args(int argc, char *argv[], char *envp[])
 
 int main(int argc, char *argv[], char *envp[])
 {
-	freopen("/dev/tty", "w", stdout);
-	freopen("/dev/tty", "w", stderr);
-
-	test_args(argc, argv, envp);
-	FILE *test = fopen("/Test.txt", "r");
+	printf("Hello, World!\n");
+	// while (1);
+	// test_args(argc, argv, envp);
+	FILE *test = fopen("/test.txt", "r");
 	if (test == NULL)
 	{
 		printf("Failed to open file\n");
-		return 1;
+		return -0xF11e;
 	}
 
 	printf("Test.txt contents: ");
 	char ch;
-	do
+	while (1)
 	{
 		ch = fgetc(test);
+		if (ch == EOF)
+		{
+			printf("\n");
+			break;
+		}
 		putchar(ch);
-	} while (ch != EOF);
-
+	}
 	fclose(test);
 
-	pid_t pid;
-	int status;
-
-	pid = fork();
+	pid_t pid = fork();
 
 	if (pid == 0) // Child process
 	{
+		pid_t pid2 = fork();
+		if (pid == 0) // Child process
+		{
+			char *shebang_args[] = {"/test.sh", NULL};
+			execv(shebang_args[0], shebang_args);
+		}
+
 		printf("Creating shell process\n");
-		char *args[] = {"/bin/sh", NULL};
+		char *args[] = {"/bin/echo", "Hello, World!", NULL};
 		execv(args[0], args);
 		exit(EXIT_FAILURE);
 	}
 	else if (pid > 0)
 	{
+		printf("Waiting for child process %d to exit\n", pid);
+		int status;
 		wait(&status);
-		if (WIFEXITED(status))
+		int exited = WIFEXITED(status);
+		if (exited)
 		{
-			printf("Child process exited with code: %d\n", WEXITSTATUS(status));
-			return WEXITSTATUS(status);
+			int exit_code = WEXITSTATUS(status);
+			printf("Child process exited with code: %d\n", exit_code);
+			return exit_code;
 		}
 		else
 		{
-			printf("Execution failed.\n");
+			printf("Execution failed. (%d)\n", exited);
 			exit(EXIT_FAILURE);
 		}
 	}
