@@ -1,3 +1,6 @@
+# Config file
+include ../../../Makefile.conf
+
 cwd := $(CURDIR)
 CACHE_DIR := $(cwd)/../../cache
 PREFIX := $(cwd)/../../out/
@@ -50,9 +53,13 @@ endif
 build:
 	make -C echo build
 	make -C fsh build
+	make -C utest build
+	make -C cross_test build
 #	$(MAKE) build_busybox
 #	$(MAKE) build_bash
 
 clean:
 	make -C echo clean
 	make -C fsh clean
+	make -C utest clean
+	make -C cross_test clean

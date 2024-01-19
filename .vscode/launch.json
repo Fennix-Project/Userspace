@@ -35,7 +35,7 @@
 					"description": "Load binary."
 				},
 				{
-					"text": "add-symbol-file ${workspaceFolder}/../Kernel/kernel.fsys",
+					"text": "add-symbol-file ${workspaceFolder}/../Kernel/fennix.elf",
 					"description": "Load kernel binary."
 				},
 			]
@@ -74,7 +74,7 @@
 					"description": "Load binary."
 				},
 				{
-					"text": "add-symbol-file ${workspaceFolder}/../Kernel/kernel.fsys",
+					"text": "add-symbol-file ${workspaceFolder}/../Kernel/fennix.elf",
 					"description": "Load kernel binary."
 				},
 			]
@@ -113,7 +113,7 @@
 					"description": "Load binary."
 				},
 				{
-					"text": "add-symbol-file ${workspaceFolder}/../Kernel/kernel.fsys",
+					"text": "add-symbol-file ${workspaceFolder}/../Kernel/fennix.elf",
 					"description": "Load kernel binary."
 				},
 			]
