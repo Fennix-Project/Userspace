@@ -41,7 +41,7 @@ ifeq ($(wildcard cache/musl),)
 endif
 	$(info Installing musl libc)
 	cd cache/musl && make TARGET=$(TARGET) install
-	cp out/lib/crt1.o out/lib/crt0.o
+#	cp out/lib/crt1.o out/lib/crt0.o
 	cd out/lib && ln -s /lib/libc.so ./ld-musl-x86_64.so.1 && \
 	ln -s /lib/libc.so ./ld.so
 	mkdir -p out/include/fennix

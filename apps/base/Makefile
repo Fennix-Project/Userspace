@@ -51,15 +51,15 @@ endif
 	CROSS_COMPILE=$(BUSYBOX_CROSS_PATH) install
 
 build:
-	make -C echo build
-	make -C fsh build
 	make -C utest build
 	make -C cross_test build
+	make -C echo build
+	make -C fsh build
 #	$(MAKE) build_busybox
 #	$(MAKE) build_bash
 
 clean:
-	make -C echo clean
-	make -C fsh clean
 	make -C utest clean
 	make -C cross_test clean
+	make -C echo clean
+	make -C fsh clean
