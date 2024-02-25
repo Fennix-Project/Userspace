@@ -112,8 +112,20 @@ long __musl_syscall_ret(unsigned long r)
 	return r;
 }
 
-struct passwd *p = NULL;
+void test_unaligned()
+{
+	printf("- Testing unaligned access\n");
 
+	int *ptr = (int *)malloc(sizeof(int));
+	uintptr_t unaligned_addr = (uintptr_t)ptr + 1;
+	*(int *)unaligned_addr = 42;
+	printf("%p->%p: %d\n", (void *)ptr,
+		   (void *)unaligned_addr,
+		   *(int *)unaligned_addr);
+	free(ptr);
+}
+
+struct passwd *p = NULL;
 void test_passwd()
 {
 	printf("- Testing passwd\n");
@@ -738,6 +750,7 @@ int main(int argc, char *argv[], char *envp[])
 	// fork_bomb();
 	// fork_bomb_syscall();
 
+	test_unaligned();
 	test_passwd();
 	test_brk();
 	test_time();
