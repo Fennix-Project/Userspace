@@ -387,7 +387,7 @@ void signalHandler(int signo)
 		printf("Signal received\n");
 	else
 		printf("Unknown signal received %d\n", signo);
-	sigRec = 1;
+	sigRec++;
 }
 
 void test_signal()
@@ -400,7 +400,7 @@ void test_signal()
 	printf("Sending SIGUSR2...\n");
 	kill(getpid(), SIGUSR2);
 	printf("Signal sent\n");
-	while (!sigRec)
+	while (sigRec < 2)
 		sleep(1);
 }
 
