@@ -494,7 +494,7 @@ char *create_file()
 	if (p == NULL)
 	{
 		path = malloc(20);
-		sprintf(path, "/watched_file.txt");
+		sprintf(path, "/tmp/watched_file.txt");
 		fp = fopen(path, "w");
 	}
 	else
@@ -522,7 +522,7 @@ char *create_directory()
 	if (p == NULL)
 	{
 		path = malloc(20);
-		sprintf(path, "/watched_directory");
+		sprintf(path, "/tmp/watched_directory");
 	}
 	else
 	{
